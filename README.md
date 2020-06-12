@@ -1,1 +1,2 @@
-# omenabot1.0...
+# Omena!BOT
+#### A general purpose discord bot.
