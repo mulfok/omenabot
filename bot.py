@@ -128,7 +128,8 @@ async def randomanimesong(ctx):
 					"https://www.youtube.com/watch?v=z1PWA11Ec3E",
 					"https://www.youtube.com/watch?v=79d4RHbNjOQ `MulfoK: Okay lol this one is reaallly bad`",
 					"https://www.youtube.com/watch?v=JBqxVX_LXvk",
-					"https://www.youtube.com/watch?v=lOfZLb33uCg `MulfoK: Totally an anime song`"
+					"https://www.youtube.com/watch?v=lOfZLb33uCg `MulfoK: Totally an anime song`",
+					"https://www.youtube.com/watch?v=m2eXg19DjPw"
 				   ]
 	await ctx.send(f"The developers are not weebs I swear :eyes:\n{random.choice(animeresponses)}")
 
@@ -206,6 +207,7 @@ async def help(ctx):
 	helpembed.add_field(name="slap [person]", value="Slap whoever you choose!", inline=False)
 	helpembed.add_field(name="changeprefix [prefix]", value="Changes server prefix. (Requires admin permission)", inline=False)
 	helpembed.add_field(name="f", value="Sends a random image of the letter F.", inline=False)
+	helpembed.add_field(name="randomanimesong", value="Sends a random anime song.", inline=False)
 
 	await ctx.send(embed=helpembed)
 
@@ -381,10 +383,10 @@ async def unban(ctx, *, member):
 @client.command(aliases=["quit", "exit", "stop"])
 #@commands.has_permissions(administrator=True)
 async def close(ctx):
-	if (ctx.author.name, ctx.author.discriminator) == (("lenrik1589", "2723") or ("MulfoK", "6931")):
+	if ctx.author.id == (465816879072542720 or 437296242817761292): #first id is mulfok, second is lenrik
 		await ctx.send("Shutting down... See ya! :lock:")
 		await client.close()
-		print('Bot Closed')
+		print('Bot Closed By Developer')
 
 	else:
 		await ctx.send("You're not a developer! :x:")
