@@ -6,6 +6,8 @@ import json
 from discord.ext import commands, tasks
 from itertools import cycle
 
+#see if commiting works
+
 #grabs server prefix from each server
 def get_prefix(client, message):
 	with open('prefixes.json', 'r') as f:
