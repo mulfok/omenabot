@@ -342,8 +342,10 @@ async def clear(ctx, amount : int):
 @client.command()
 async def aboutme(ctx):
 	await ctx.send("```Omena!BOT a2.0.2\n" + \
-				   "Developed by: MulfoK\n" + \
-				   ""
+				   "Developed by:\n" + \
+				   "MulfoK: Lead Programmer\n" + \
+				   "lenrik1589: Programmer\n" + \
+				   " \n" + \
 				   "General Purpose Discord Bot\n" + \
 				   "Written in Python 3.8.2\n" + \
 				   "help for commands list (~ is default prefix)```")
