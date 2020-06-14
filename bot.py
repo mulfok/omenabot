@@ -390,6 +390,8 @@ async def unban(ctx, *, member):
 			return
 
 #Developer Commands
+##################################################################
+#stops bot command
 @client.command(aliases=["quit", "exit", "stop"])
 #@commands.has_permissions(administrator=True)
 async def close(ctx):
@@ -402,9 +404,10 @@ async def close(ctx):
 		await ctx.send("You're not a developer! :x:")
 		print("Someone tried to close the bot!")
 
+#github link command (useful for if you lost the link or something)
 @client.command()
 async def github(ctx):
-	if ctx.author.id == (465816879072542720 or 437296242817761292): #first id is mulfok, second is lenrik
+	if ctx.author.id == (465816879072542720 or 437296242817761292 or 691668587005607957): #first id is mulfok, second is lenrik, third is wullie
 		await ctx.author.send("Github (Private): https://github.com/MulfoK/omenabot1.0\nShh... Let's not leak our hard work!")
 		await ctx.send("You have been private messaged the github link. :white_check_mark:")
 		print("Github pulled up by developer.")
@@ -412,6 +415,8 @@ async def github(ctx):
 	else:
 		await ctx.send("You're not a developer! :x:")
 		print("Someone tried to pull up the Github link!")
+
+##################################################################
 
 #slap commands
 @client.command()
