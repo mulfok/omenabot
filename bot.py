@@ -3,10 +3,10 @@ import os
 import random
 import pathlib
 import json
+import youtube_dl
 from discord.ext import commands, tasks
+from discord.utils import get
 from itertools import cycle
-
-#see if commiting works
 
 #grabs server prefix from each server
 def get_prefix(client, message):
@@ -35,7 +35,7 @@ async def on_connect():
 	print('Connected to discord...')
 
 @client.event
-async def on_disconnect():
+async def on_disconnect(): 
 	print('Disconnected from discord.')
 
 @client.event
@@ -69,6 +69,8 @@ async def on_guild_remove(guild):
 
 	with open('prefixes.json', 'w') as f:
 		json.dump(prefixes, f, indent=4)
+
+#music player
 
 @client.command()
 @commands.has_permissions(administrator=True)
@@ -110,13 +112,17 @@ async def pingtrue(ctx):
 @client.command()
 async def f(ctx):
 	#send image link
+	fresponses=["https://cdn.discordapp.com/attachments/720598695191511110/720861011032408064/F.png",
+			    "https://cdn.discordapp.com/attachments/720598695191511110/721123893716189224/tenor.gif"
+			   ]
+
 	fauthor = ctx.message.author
 
 	fembed = discord.Embed(
 		colour = discord.Colour.red()
 	)
 	fembed.set_author(name="Paying respects...")
-	fembed.set_image(url="https://cdn.discordapp.com/attachments/720598695191511110/720861011032408064/F.png")
+	fembed.set_image(url=f"{random.choice(fresponses)}")
 
 	await ctx.send(embed=fembed)
 
@@ -208,6 +214,7 @@ async def help(ctx):
 	helpembed.add_field(name="changeprefix [prefix]", value="Changes server prefix. (Requires admin permission)", inline=False)
 	helpembed.add_field(name="f", value="Sends a random image of the letter F.", inline=False)
 	helpembed.add_field(name="randomanimesong", value="Sends a random anime song.", inline=False)
+	helpembed.add_field(name="github", value="Private messages github link. (Developer only command)", inline=False)
 
 	await ctx.send(embed=helpembed)
 
@@ -382,6 +389,7 @@ async def unban(ctx, *, member):
 			print(f'{user.mention} was unbanned from a server.')
 			return
 
+#Developer Commands
 @client.command(aliases=["quit", "exit", "stop"])
 #@commands.has_permissions(administrator=True)
 async def close(ctx):
@@ -392,12 +400,23 @@ async def close(ctx):
 
 	else:
 		await ctx.send("You're not a developer! :x:")
-		print("Someone tried to close the bot lol!")
+		print("Someone tried to close the bot!")
+
+@client.command()
+async def github(ctx):
+	if ctx.author.id == (465816879072542720 or 437296242817761292): #first id is mulfok, second is lenrik
+		await ctx.author.send("Github (Private): https://github.com/MulfoK/omenabot1.0\nShh... Let's not leak our hard work!")
+		await ctx.send("You have been private messaged the github link. :white_check_mark:")
+		print("Github pulled up by developer.")
+
+	else:
+		await ctx.send("You're not a developer! :x:")
+		print("Someone tried to pull up the Github link!")
 
 #slap commands
 @client.command()
 async def slap(ctx, *, arg):
-	await ctx.send("Slapped " + arg + "!")
+	await ctx.send(f"Slapped {arg}!")
 #-----------------------------------
 #error catch area
 @client.event
