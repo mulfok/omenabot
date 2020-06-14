@@ -18,7 +18,6 @@ def get_prefix(client, message):
 #Set bot command prefix!
 client = commands.Bot(command_prefix = get_prefix)
 
-
 client.remove_command('help')
 status = cycle(['help - Brings up commands', 'aboutme - Shows bot info', 'trivia - Fun facts!', 'changeprefix - Customise server prefix!'])
 
@@ -215,6 +214,7 @@ async def help(ctx):
 	helpembed.add_field(name="f", value="Sends a random image of the letter F.", inline=False)
 	helpembed.add_field(name="randomanimesong", value="Sends a random anime song.", inline=False)
 	helpembed.add_field(name="github", value="Private messages github link. (Developer only command)", inline=False)
+	helpembed.add_field(name="todo", value="Private messages bot to-do list. (Developer only command)", inline=False)
 
 	await ctx.send(embed=helpembed)
 
@@ -415,6 +415,22 @@ async def github(ctx):
 	else:
 		await ctx.send("You're not a developer! :x:")
 		print("Someone tried to pull up the Github link!")
+
+#todo command
+@client.command()
+async def todo(ctx):
+	if ctx.author.id == (465816879072542720 or 437296242817761292 or 691668587005607957): #first id is mulfok, second is lenrik, third is wullie
+		await ctx.author.send("I feel sorry for you developers..." + \
+							  "```Our epic todo list:\n" + \
+							  "1: Integrate a music player into Omena\n" + \
+							  "2: Get a ~calc command working from a cog\n```"
+							 )
+		await ctx.send("The developer to-do list has been private messaged to you! :white_check_mark:")
+		print("Todo list pulled up by developer")
+
+	else:
+		await ctx.send("You're not a developer! :x:")
+		print("Someone tried to pull of the developer to-do list!")
 
 ##################################################################
 
