@@ -5,7 +5,6 @@ import pathlib
 import json
 import youtube_dl
 import asyncio
-import time
 from discord.ext import commands, tasks
 from discord.utils import get
 from itertools import cycle
@@ -358,7 +357,7 @@ async def clear(ctx, amount : int):
 
 @client.command()
 async def aboutme(ctx):
-	await ctx.send("```Omena!BOT a0.4.5\n" + \
+	await ctx.send("```Omena!BOT a4.0.5\n" + \
 				   "Developed by:\n" + \
 				   "MulfoK: Lead Programmer\n" + \
 				   "lenrik1589: Programmer\n" + \
@@ -380,7 +379,6 @@ async def kick(ctx, member : discord.Member, *, reason=None):
 async def ban(ctx, member : discord.Member, *, reason=None):
 	await member.ban(reason=reason)
 	await ctx.send(f'{member.mention} was banned from the server. :hammer:')
-	print(f'{member} was banned from a server!')
 
 @client.command()
 @commands.has_permissions(administrator=True)
@@ -395,7 +393,6 @@ async def unban(ctx, *, member):
 		if (user.name, user.discriminator) == (member_name, member_discriminator):
 			await ctx.guild.unban(user)
 			await ctx.send(f'Unbanned {user.mention}. Welcome back! :wave:')
-			print(f'{user.mention} was unbanned from a server.')
 			return
 
 #Developer Commands
@@ -408,50 +405,50 @@ async def close(ctx):
 	if attempt_id == 465816879072542720 or attempt_id == 437296242817761292: #first id is mulfok, second is lenrik
 		await ctx.send("Shutting down... See ya! :lock:")
 		await client.close()
-		print('Bot Closed By Developer')
+		print(f'Bot Closed By Developer: {ctx.author.name} ID: {ctx.author.id}')
 
 	else:
 		await ctx.send("You're not a developer! :x:")
-		print("{ctx.author}(ID{ctx.author.id}) tried to close the bot!")
+		print(f"{ctx.author} (ID: {ctx.author.id}) tried to close the bot!")
 
 #github link command (useful for if you lost the link or something)
 @client.command()
 async def github(ctx):
 	attempt_id = ctx.author.id
-	if attempt_id == 437296242817761292 or attempt_id == 465816879072542720 or attempt_id == 691668587005607957: #first id is lenrik, second is mulfok, third is wullie
+	if attempt_id == 437296242817761292 or attempt_id == 465816879072542720 or attempt_id == 691668587005607957 or attempt_id == 634189650608652310: #first id is lenrik, second is mulfok, third is wullie, fourth is brady
 		await ctx.author.send("Github (Private): https://github.com/MulfoK/omenabot1.0\nShh... Let's not leak our hard work!")
 		await ctx.send("You have been private messaged the github link. :white_check_mark:")
-		print(f"Github pulled up by {ctx.author.name}.")
+		print(f"Github pulled up by {ctx.author} ID: {ctx.author.id}")
 		time.sleep(1)
 		await ctx.channel.purge(limit=2)
 
 	else:
 		await ctx.send("You're not a developer! :x:")
-		print(f"{ctx.author}(ID{ctx.author.id}) tried to pull up the Github link!")
+		print(f"{ctx.author} ID: {ctx.author.id} tried to pull up the Github link!")
 
 #todo command
 @client.command()
 async def todo(ctx):
 	attempt_id = ctx.author.id
-	if attempt_id == 437296242817761292 or attempt_id == 465816879072542720 or attempt_id == 691668587005607957: #first id is mulfok, second is lenrik, third is wullie
+	if attempt_id == 437296242817761292 or attempt_id == 465816879072542720 or attempt_id == 691668587005607957 or attempt_id == 634189650608652310: #first id is mulfok, second is lenrik, third is wullie, fourth is brady
 		await ctx.author.send("I feel sorry for you developers...\n" + \
 							  "```Our epic todo list:\n" + \
 							  "1: Integrate a music player into Omena\n" + \
 							  "2: Get a ~calc command working from a cog\n```"
 							 )
 		await ctx.send("The developer to-do list has been private messaged to you! :white_check_mark:")
-		print("Todo list pulled up by developer")
+		print(f"Todo list pulled up by {ctx.author} ID: {ctx.author.id}")
 
 	else:
 		await ctx.send("You're not a developer! :x:")
-		print("{ctx.author}(ID{ctx.author.id}) tried to pull of the developer to-do list!")
-
+		print(f"{ctx.author} ID: {ctx.author.id} tried to pull of the developer to-do list!")
+#######################################################
 #calc command
 @client.command()
 async def calc(ctx):
 	joint = ctx.message.content[len(prefixes[str(ctx.guild.id)]) + 4:].replace(' ', '')
 	if not joint.isascii():
-		await ctx.send(f"{prefixes[str(ctx.guild.id)])}calc only accepts ASCII characters as input!")
+		await ctx.send("{prefixes[str(ctx.guild.id)])}calc only accepts ASCII characters as input!")
 		return
 	illegal_chars = joint #There was a . here??
 	#''.
@@ -463,7 +460,7 @@ async def calc(ctx):
 @client.command()
 async def alcohol(ctx):
 	if ctx.author.id == 397573419811602442: #karnage 397573419811602442
-		await ctx.send("Go drink alcohol you madman. :beer:")
+		await ctx.seyound("Go drink alcohol you madman. :beer:")
 
 	else:
 		await ctx.send("This command isn't for you! :x:")
