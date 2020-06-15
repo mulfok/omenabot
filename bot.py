@@ -471,8 +471,17 @@ async def alcohol(ctx):
 #coffee command
 @client.command()
 async def coffee(ctx):
-	if ctx.author.id == 465816879072542720: #mulfok 465816879072542720
+	if ctx.author.id == 721045183982207046: #lenrick 721045183982207046
 		await ctx.send("Go drink coffee you madman. :coffee:")
+
+	else:
+		await ctx.send("This command isn't for you! :x:")
+
+#ifstatment command
+@client.command()
+async def ifstatement(ctx):
+	if ctx.author.id == 465816879072542720:
+		await ctx.send("Go learn if statments you madman. :dagger:")
 
 	else:
 		await ctx.send("This command isn't for you! :x:")
@@ -528,11 +537,6 @@ async def hack(ctx, *, hackvic):
 	await hack_message.edit(content=f"Payment recieved: {random.choice(hackpayment)}")
 	await time.sleep(1)
 	await ctx.send(f"The 100% real hack is complete.")
-	await ctx.send(f"Homework folder size: {homeworkstorage}")
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-##################################################################
-#slap commands
 @client.command()
 async def slap(ctx, *, arg):
 	await ctx.send(f"Slapped {arg}!")
