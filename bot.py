@@ -12,8 +12,6 @@ from itertools import cycle
 
 #grabs server prefix from each server
 def get_prefix(client, message):
-	with open(f'{rundir}/prefixes.json', 'r') as f:
-		prefixes = json.load(f)
 	
 	return prefixes[str(message.guild.id)]
 
@@ -25,6 +23,9 @@ status = cycle(['help - Brings up commands', 'aboutme - Shows bot info', 'trivia
 
 rundir = pathlib.Path(__file__,).parent.absolute()
 home = os.getenv('HOME')
+
+with open(f'{rundir}/prefixes.json', 'r') as f:
+	prefixes = json.load(f)
 
 config = {}
 
@@ -412,7 +413,7 @@ async def close(ctx):
 
 	else:
 		await ctx.send("You're not a developer! :x:")
-		print("{ctx.author}(ID{ctx.author.id}) tried to close the bot!")
+		print(f"{ctx.author}(ID{ctx.author.id}) tried to close the bot!")
 
 #github link command (useful for if you lost the link or something)
 @client.command()
@@ -429,6 +430,16 @@ async def github(ctx):
 		await ctx.send("You're not a developer! :x:")
 		print(f"{ctx.author}(ID{ctx.author.id}) tried to pull up the Github link!")
 
+#join command
+@client.command()
+async def join(ctx):
+	print('aa')
+	if not ctx.author.voice == None:
+		print('ee')
+	else:
+		await ctx.send('Make sure to be connectaed to voice chat on this server.')
+	print('ss')
+
 #todo command
 @client.command()
 async def todo(ctx):
@@ -444,17 +455,19 @@ async def todo(ctx):
 
 	else:
 		await ctx.send("You're not a developer! :x:")
-		print("{ctx.author}(ID{ctx.author.id}) tried to pull of the developer to-do list!")
+		print(f"{ctx.author}(ID{ctx.author.id}) tried to pull of the developer to-do list!")
 
 #calc command
 @client.command()
 async def calc(ctx):
 	joint = ctx.message.content[len(prefixes[str(ctx.guild.id)]) + 4:].replace(' ', '')
 	if not joint.isascii():
-		await ctx.send("{prefixes[str(ctx.guild.id)])}calc only accepts ASCII characters as input!")
+		await ctx.send(f"{prefixes[str(ctx.guild.id)]}calc only accepts ASCII characters as input!")
 		return
-	illegal_chars = joint.
-	''.
+	elif len(joint.replace(["+", "-", "/", '\\',' % ',' ^ ',' * '],' ')) < 1:
+		await ctx.send(f'You should add atleast one digit to have calculation possible.')
+		return
+	# illegal_chars = joint.
 	# await ctx.send()
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
