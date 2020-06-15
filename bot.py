@@ -346,7 +346,11 @@ async def mcmd3(ctx):
 @client.command()
 @commands.has_permissions(manage_messages=True)
 async def clear(ctx, amount : int):
-	await ctx.channel.purge(limit=amount)
+	if amount < 0:
+		await ctx.channel.purge(limit=amount)
+
+	else:
+		await ctx.send("That's not a valid argument! :x:")
 
 @client.command()
 async def aboutme(ctx):
@@ -396,7 +400,7 @@ async def unban(ctx, *, member):
 @client.command(aliases=["quit", "exit", "stop"])
 #@commands.has_permissions(administrator=True)
 async def close(ctx):
-	if ctx.author.id == (465816879072542720 or 437296242817761292): #first id is mulfok, second is lenrik
+	if ctx.author.id == 465816879072542720 or ctx.author.id == 437296242817761292: #first id is mulfok, second is lenrik
 		await ctx.send("Shutting down... See ya! :lock:")
 		await client.close()
 		print('Bot Closed By Developer')
@@ -408,7 +412,7 @@ async def close(ctx):
 #github link command (useful for if you lost the link or something)
 @client.command()
 async def github(ctx):
-	if ctx.author.id == 437296242817761292 or 465816879072542720 or 691668587005607957: #first id is mulfok, second is lenrik, third is wullie
+	if ctx.author.id == 437296242817761292 or ctx.author.id == 465816879072542720 or ctx.author.id == 691668587005607957: #first id is mulfok, second is lenrik, third is wullie
 		await ctx.author.send("Github (Private): https://github.com/MulfoK/omenabot1.0\nShh... Let's not leak our hard work!")
 		await ctx.send("You have been private messaged the github link. :white_check_mark:")
 		print("Github pulled up by developer.")
@@ -420,7 +424,7 @@ async def github(ctx):
 #todo command
 @client.command()
 async def todo(ctx):
-	if ctx.author.id == 437296242817761292 or 465816879072542720 or 691668587005607957: #first id is mulfok, second is lenrik, third is wullie
+	if ctx.author.id == 437296242817761292 or ctx.author.id == 465816879072542720 or ctx.author.id == 691668587005607957: #first id is mulfok, second is lenrik, third is wullie
 		await ctx.author.send("I feel sorry for you developers...\n" + \
 							  "```Our epic todo list:\n" + \
 							  "1: Integrate a music player into Omena\n" + \
@@ -447,8 +451,17 @@ async def alcohol(ctx):
 #coffee command
 @client.command()
 async def coffee(ctx):
-	if ctx.author.id == 465816879072542720: #mulfok 465816879072542720
+	if ctx.author.id == 721045183982207046: #lenrick 721045183982207046
 		await ctx.send("Go drink coffee you madman. :coffee:")
+
+	else:
+		await ctx.send("This command isn't for you! :x:")
+
+#ifstatment command
+@client.command()
+async def ifstatement(ctx):
+	if ctx.author.id == 465816879072542720:
+		await ctx.send("Go learn if statments you madman. :dagger:")
 
 	else:
 		await ctx.send("This command isn't for you! :x:")
@@ -493,7 +506,7 @@ async def hack(ctx, *, hackvic):
 	await asyncio.sleep(2)
 	await hack_message.edit(content=f"Selling data to {random.choice(hackcompanies)}...")
 	await asyncio.sleep(2)
-	await hack_message.edit(content=f"Laughing evilly...")
+	await hack_message.edit(content=f"Payment recieved: {random.choice(hackpayment)}")
 	await asyncio.sleep(2)
 	await hack_message.edit(content="Bypassing Discord security...")
 	await asyncio.sleep(2)
@@ -501,7 +514,7 @@ async def hack(ctx, *, hackvic):
 	await asyncio.sleep(2)
 	await hack_message.edit(content=f"Reporting {hackvic} for breaking Discord TOS...")
 	await asyncio.sleep(2)
-	await hack_message.edit(content=f"Payment recieved: {random.choice(hackpayment)}")
+	await hack_message.edit(content=f"Laughing evilly...")
 	await asyncio.sleep(1)
 	await ctx.send(f"The 100% real hack is complete.")
 	await ctx.send(f"Homework folder size: {homeworkstorage}")
