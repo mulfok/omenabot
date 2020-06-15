@@ -444,6 +444,15 @@ async def alcohol(ctx):
 	else:
 		await ctx.send("This command isn't for you! :x:")
 
+#coffee command
+@client.command()
+async def coffee(ctx):
+	if ctx.author.id == 465816879072542720: #mulfok 465816879072542720
+		await ctx.send("Go drink coffee you madman. :coffee:")
+
+	else:
+		await ctx.send("This command isn't for you! :x:")
+
 #hack command
 @client.command()
 async def hack(ctx, *, hackvic):
@@ -494,7 +503,8 @@ async def hack(ctx, *, hackvic):
 	await asyncio.sleep(2)
 	await hack_message.edit(content=f"Payment recieved: {random.choice(hackpayment)}")
 	await asyncio.sleep(1)
-	await ctx.send(f"The 100% real hack is complete.\nHomework folder size: {homeworkstorage}")
+	await ctx.send(f"The 100% real hack is complete.")
+	await ctx.send(f"Homework folder size: {homeworkstorage}")
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##################################################################
