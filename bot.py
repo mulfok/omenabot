@@ -458,10 +458,15 @@ async def hack(ctx, *, hackvic):
 					"theist mother"
 					]
 
-	hacktasks = ["Grabbing 2TB 'Homework' folder...",
-				f"Texting {hackvic}'s crush...",
-				"Stealing payment information..."
-				]
+	hackhomework = ["1GB",
+				    "10GB",
+					"100GB",
+					"1TB",
+					"2TB",
+					"10TB",
+					"100TB",
+					"1PB"
+				   ]
 
 	hackpayment = ["£1.00",
 				   "£25.00",
@@ -470,10 +475,12 @@ async def hack(ctx, *, hackvic):
 				   "£100.00",
 				   "£1000.00"
 				]
+	#store homework amount in temp variable
+	homeworkstorage = random.choice(hackhomework)
 	#send messages in a timely order
 	hack_message = await ctx.send(f"Hacking {hackvic}...")
 	await asyncio.sleep(2)
-	await hack_message.edit(content=f"Grabbing 2TB 'Homework' folder...")
+	await hack_message.edit(content=f"Grabbing {homeworkstorage} 'Homework' folder...")
 	await asyncio.sleep(2)
 	await hack_message.edit(content=f"Selling data to {random.choice(hackcompanies)}...")
 	await asyncio.sleep(2)
@@ -487,7 +494,7 @@ async def hack(ctx, *, hackvic):
 	await asyncio.sleep(2)
 	await hack_message.edit(content=f"Payment recieved: {random.choice(hackpayment)}")
 	await asyncio.sleep(1)
-	await ctx.send(f"The 100% real hack is complete.")
+	await ctx.send(f"The 100% real hack is complete.\nHomework folder size: {homeworkstorage}")
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##################################################################
