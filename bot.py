@@ -4,6 +4,7 @@ import random
 import pathlib
 import json
 import youtube_dl
+import asyncio
 from discord.ext import commands, tasks
 from discord.utils import get
 from itertools import cycle
@@ -349,7 +350,7 @@ async def clear(ctx, amount : int):
 
 @client.command()
 async def aboutme(ctx):
-	await ctx.send("```Omena!BOT a2.0.2\n" + \
+	await ctx.send("```Omena!BOT a4.0.5\n" + \
 				   "Developed by:\n" + \
 				   "MulfoK: Lead Programmer\n" + \
 				   "lenrik1589: Programmer\n" + \
@@ -432,15 +433,63 @@ async def todo(ctx):
 		await ctx.send("You're not a developer! :x:")
 		print("Someone tried to pull of the developer to-do list!")
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#easter egg commands
 #alcohol command
 @client.command()
 async def alcohol(ctx):
-	if ctx.author.id == 397573419811602442 or 465816879072542720: #karnage 397573419811602442 465816879072542720
+	if ctx.author.id == 397573419811602442: #karnage 397573419811602442
 		await ctx.send("Go drink alcohol you madman. :beer:")
 
 	else:
 		await ctx.send("This command isn't for you! :x:")
 
+#hack command
+@client.command()
+async def hack(ctx, *, hackvic):
+	#setup random responses array
+	hackcompanies = ["Mojang Studios",
+					"Epic Games",
+					"Microsoft",
+					"Roblox Studios",
+					"Google",
+					"Canonical",
+					"Facebook",
+					"theist mother"
+					]
+
+	hacktasks = ["Grabbing 2TB 'Homework' folder...",
+				f"Texting {hackvic}'s crush...",
+				"Stealing payment information..."
+				]
+
+	hackpayment = ["£1.00",
+				   "£25.00",
+				   "£50.00",
+				   "£75.00",
+				   "£100.00",
+				   "£1000.00"
+				]
+	#send messages in a timely order
+	hack_message = await ctx.send(f"Hacking {hackvic}...")
+	await asyncio.sleep(2)
+	await hack_message.edit(content=f"Grabbing 2TB 'Homework' folder...")
+	await asyncio.sleep(2)
+	await hack_message.edit(content=f"Selling data to {random.choice(hackcompanies)}...")
+	await asyncio.sleep(2)
+	await hack_message.edit(content=f"Laughing evilly...")
+	await asyncio.sleep(2)
+	await hack_message.edit(content="Bypassing Discord security...")
+	await asyncio.sleep(2)
+	await hack_message.edit(content=f"Email: {hackvic}hasnofriends@hotmail.com\nPassword: ihateyouihateyougodie")
+	await asyncio.sleep(2)
+	await hack_message.edit(content=f"Reporting {hackvic} for breaking Discord TOS...")
+	await asyncio.sleep(2)
+	await hack_message.edit(content=f"Payment recieved: {random.choice(hackpayment)}")
+	await asyncio.sleep(1)
+	await ctx.send(f"The 100% real hack is complete.")
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##################################################################
 #slap commands
 @client.command()
