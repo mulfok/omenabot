@@ -183,7 +183,7 @@ async def trivia(ctx):
 					   "A '#' is called an octothorp!",
 					   "A group of whales is called a pod!",
 					   "Jack-O'-lanterns were originally made with turnips, not pumpkins!",
-						 "<@465816879072542720> loves to bork up `if` statements!"
+					   "<@465816879072542720> loves to bork up if statements!",
 					   "The blue M&M was introduced in 1995!",
 					   "Lenrik is not a good programmer!",
 					   "Bow down to Rib!",
@@ -404,8 +404,8 @@ async def unban(ctx, *, member):
 @client.command(aliases=["quit", "exit", "stop"])
 #@commands.has_permissions(administrator=True)
 async def close(ctx):
-	atempt_id = ctx.author.id
-	if atempt_id == 465816879072542720 or atempt_id == 437296242817761292: #first id is mulfok, second is lenrik
+	attempt_id = ctx.author.id
+	if attempt_id == 465816879072542720 or attempt_id == 437296242817761292: #first id is mulfok, second is lenrik
 		await ctx.send("Shutting down... See ya! :lock:")
 		await client.close()
 		print('Bot Closed By Developer')
@@ -417,8 +417,8 @@ async def close(ctx):
 #github link command (useful for if you lost the link or something)
 @client.command()
 async def github(ctx):
-	atempt_id = ctx.author.id
-	if atempt_id == 437296242817761292 or atempt_id == 465816879072542720 or atempt_id == 691668587005607957: #first id is lenrik, second is mulfok, third is wullie
+	attempt_id = ctx.author.id
+	if attempt_id == 437296242817761292 or attempt_id == 465816879072542720 or attempt_id == 691668587005607957: #first id is lenrik, second is mulfok, third is wullie
 		await ctx.author.send("Github (Private): https://github.com/MulfoK/omenabot1.0\nShh... Let's not leak our hard work!")
 		await ctx.send("You have been private messaged the github link. :white_check_mark:")
 		print(f"Github pulled up by {ctx.author.name}.")
@@ -432,8 +432,8 @@ async def github(ctx):
 #todo command
 @client.command()
 async def todo(ctx):
-	atempt_id = ctx.author.id
-	if atempt_id == 437296242817761292 or atempt_id == 465816879072542720 or atempt_id == 691668587005607957: #first id is mulfok, second is lenrik, third is wullie
+	attempt_id = ctx.author.id
+	if attempt_id == 437296242817761292 or attempt_id == 465816879072542720 or attempt_id == 691668587005607957: #first id is mulfok, second is lenrik, third is wullie
 		await ctx.author.send("I feel sorry for you developers...\n" + \
 							  "```Our epic todo list:\n" + \
 							  "1: Integrate a music player into Omena\n" + \
@@ -451,10 +451,10 @@ async def todo(ctx):
 async def calc(ctx):
 	joint = ctx.message.content[len(prefixes[str(ctx.guild.id)]) + 4:].replace(' ', '')
 	if not joint.isascii():
-		await ctx.send("{prefixes[str(ctx.guild.id)])}calc only accepts ASCII characters as input!")
+		await ctx.send(f"{prefixes[str(ctx.guild.id)])}calc only accepts ASCII characters as input!")
 		return
-	illegal_chars = joint.
-	''.
+	illegal_chars = joint #There was a . here??
+	#''.
 	# await ctx.send()
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -478,8 +478,8 @@ async def coffee(ctx):
 		await ctx.send("This command isn't for you! :x:")
 
 #ifstatment command
-@client.command()
-async def ifstatement(ctx):
+@client.command(aliases=["if"])
+async def _if(ctx):
 	if ctx.author.id == 465816879072542720:
 		await ctx.send("Go learn if statments you madman. :dagger:")
 
