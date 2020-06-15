@@ -348,10 +348,10 @@ async def mcmd3(ctx):
 @client.command()
 @commands.has_permissions(manage_messages=True)
 async def clear(ctx, amount : int):
-	if amount < 0:
-		await ctx.send('Please make sure you passed right ammount of messages to delete.')
+	if amount < 1:
+		await ctx.send("That's not a valid arguement! :x:")
 	elif amount > 100:
-		await ctx.send('Please do not delete too many messages at once (*limit is 100*)! :negative_squared_cross_mark:')
+		await ctx.send("Purge limit is 100! :x:")
 	else:
 		await ctx.channel.purge(limit=amount)
 
@@ -434,7 +434,7 @@ async def todo(ctx):
 		await ctx.author.send("I feel sorry for you developers...\n" + \
 							  "```Our epic todo list:\n" + \
 							  "1: Integrate a music player into Omena\n" + \
-							  "2: Get a ~calc command working from a cog\n```"
+							  "2: Get a ~calc command working\n```"
 							 )
 		await ctx.send("The developer to-do list has been private messaged to you! :white_check_mark:")
 		print(f"Todo list pulled up by {ctx.author} ID: {ctx.author.id}")
