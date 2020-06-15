@@ -215,6 +215,7 @@ async def help(ctx):
 	helpembed.add_field(name="randomanimesong", value="Sends a random anime song.", inline=False)
 	helpembed.add_field(name="github", value="Private messages github link. (Developer only command)", inline=False)
 	helpembed.add_field(name="todo", value="Private messages bot to-do list. (Developer only command)", inline=False)
+	helpembed.set_thumbnail(url="https://cdn.discordapp.com/attachments/720598695191511110/721769409139703938/OmenaLogo.png")
 
 	await ctx.send(embed=helpembed)
 
@@ -352,7 +353,6 @@ async def aboutme(ctx):
 				   "Developed by:\n" + \
 				   "MulfoK: Lead Programmer\n" + \
 				   "lenrik1589: Programmer\n" + \
-				   " \n" + \
 				   "General Purpose Discord Bot\n" + \
 				   "Written in Python 3.8.2\n" + \
 				   "help for commands list (~ is default prefix)```")
@@ -420,7 +420,7 @@ async def github(ctx):
 @client.command()
 async def todo(ctx):
 	if ctx.author.id == (465816879072542720 or 437296242817761292 or 691668587005607957): #first id is mulfok, second is lenrik, third is wullie
-		await ctx.author.send("I feel sorry for you developers..." + \
+		await ctx.author.send("I feel sorry for you developers...\n" + \
 							  "```Our epic todo list:\n" + \
 							  "1: Integrate a music player into Omena\n" + \
 							  "2: Get a ~calc command working from a cog\n```"
@@ -432,8 +432,18 @@ async def todo(ctx):
 		await ctx.send("You're not a developer! :x:")
 		print("Someone tried to pull of the developer to-do list!")
 
-##################################################################
+#alcohol command
+@client.command()
+async def alcohol(ctx):
+	if ctx.author.id == 397573419811602442: #karnage
+		await ctx.send("Go drink alcohol you madman. :beer:")
+		return
 
+	else:
+		await ctx.send("This command isn't for you! :x:")
+		return
+
+##################################################################
 #slap commands
 @client.command()
 async def slap(ctx, *, arg):
@@ -441,7 +451,7 @@ async def slap(ctx, *, arg):
 #-----------------------------------
 #error catch area
 @client.event
-async def on_command_error(ctx, error):
+async def on_command_error(ctx, error): 
 	#checks to see if command is missing args, then sends message
 	if isinstance(error, commands.MissingRequiredArgument):
 		await ctx.send('Please fill all required arguments! :eyes:')
@@ -451,6 +461,10 @@ async def on_command_error(ctx, error):
 	if isinstance(error, commands.MissingPermissions):
 		await ctx.send("You're missing required permissions! :x:")
 		print("Someone tried to run a command that they don't have permissions for!")
+		return
+
+	if isinstance(error, commands.BotMissingPermissions):
+		await ctx.send("I'm missing administrator permissions! :x:")
 		return
 #-----------------------------------
 #Cogs Load
