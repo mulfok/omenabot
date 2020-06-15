@@ -5,15 +5,16 @@ import pathlib
 import json
 import youtube_dl
 import asyncio
+import time
 from discord.ext import commands, tasks
 from discord.utils import get
 from itertools import cycle
 
 #grabs server prefix from each server
 def get_prefix(client, message):
-	with open('prefixes.json', 'r') as f:
+	with open(f'{rundir}/prefixes.json', 'r') as f:
 		prefixes = json.load(f)
-
+	
 	return prefixes[str(message.guild.id)]
 
 #Set bot command prefix!
@@ -23,6 +24,7 @@ client.remove_command('help')
 status = cycle(['help - Brings up commands', 'aboutme - Shows bot info', 'trivia - Fun facts!', 'changeprefix - Customise server prefix!'])
 
 rundir = pathlib.Path(__file__,).parent.absolute()
+home = os.getenv('HOME')
 
 config = {}
 
@@ -181,6 +183,7 @@ async def trivia(ctx):
 					   "A '#' is called an octothorp!",
 					   "A group of whales is called a pod!",
 					   "Jack-O'-lanterns were originally made with turnips, not pumpkins!",
+						 "<@465816879072542720> loves to bork up `if` statements!"
 					   "The blue M&M was introduced in 1995!",
 					   "Lenrik is not a good programmer!",
 					   "Bow down to Rib!",
@@ -346,11 +349,16 @@ async def mcmd3(ctx):
 @client.command()
 @commands.has_permissions(manage_messages=True)
 async def clear(ctx, amount : int):
-	await ctx.channel.purge(limit=amount)
+	if amount < 0:
+		await ctx.send('Please make sure you passed right ammount of messages to delete.')
+	elif amount > 100:
+		await ctx.send('Please do not delete too many messages at once (*limit is 100*)! :negative_squared_cross_mark:')
+	else:
+		await ctx.channel.purge(limit=amount)
 
 @client.command()
 async def aboutme(ctx):
-	await ctx.send("```Omena!BOT a4.0.5\n" + \
+	await ctx.send("```Omena!BOT a0.4.5\n" + \
 				   "Developed by:\n" + \
 				   "MulfoK: Lead Programmer\n" + \
 				   "lenrik1589: Programmer\n" + \
@@ -396,31 +404,36 @@ async def unban(ctx, *, member):
 @client.command(aliases=["quit", "exit", "stop"])
 #@commands.has_permissions(administrator=True)
 async def close(ctx):
-	if ctx.author.id == (465816879072542720 or 437296242817761292): #first id is mulfok, second is lenrik
+	atempt_id = ctx.author.id
+	if atempt_id == 465816879072542720 or atempt_id == 437296242817761292: #first id is mulfok, second is lenrik
 		await ctx.send("Shutting down... See ya! :lock:")
 		await client.close()
 		print('Bot Closed By Developer')
 
 	else:
 		await ctx.send("You're not a developer! :x:")
-		print("Someone tried to close the bot!")
+		print("{ctx.author}(ID{ctx.author.id}) tried to close the bot!")
 
 #github link command (useful for if you lost the link or something)
 @client.command()
 async def github(ctx):
-	if ctx.author.id == 437296242817761292 or 465816879072542720 or 691668587005607957: #first id is mulfok, second is lenrik, third is wullie
+	atempt_id = ctx.author.id
+	if atempt_id == 437296242817761292 or atempt_id == 465816879072542720 or atempt_id == 691668587005607957: #first id is lenrik, second is mulfok, third is wullie
 		await ctx.author.send("Github (Private): https://github.com/MulfoK/omenabot1.0\nShh... Let's not leak our hard work!")
 		await ctx.send("You have been private messaged the github link. :white_check_mark:")
-		print("Github pulled up by developer.")
+		print(f"Github pulled up by {ctx.author.name}.")
+		time.sleep(1)
+		await ctx.channel.purge(limit=2)
 
 	else:
 		await ctx.send("You're not a developer! :x:")
-		print("Someone tried to pull up the Github link!")
+		print(f"{ctx.author}(ID{ctx.author.id}) tried to pull up the Github link!")
 
 #todo command
 @client.command()
 async def todo(ctx):
-	if ctx.author.id == 437296242817761292 or 465816879072542720 or 691668587005607957: #first id is mulfok, second is lenrik, third is wullie
+	atempt_id = ctx.author.id
+	if atempt_id == 437296242817761292 or atempt_id == 465816879072542720 or atempt_id == 691668587005607957: #first id is mulfok, second is lenrik, third is wullie
 		await ctx.author.send("I feel sorry for you developers...\n" + \
 							  "```Our epic todo list:\n" + \
 							  "1: Integrate a music player into Omena\n" + \
@@ -431,7 +444,18 @@ async def todo(ctx):
 
 	else:
 		await ctx.send("You're not a developer! :x:")
-		print("Someone tried to pull of the developer to-do list!")
+		print("{ctx.author}(ID{ctx.author.id}) tried to pull of the developer to-do list!")
+
+#calc command
+@client.command()
+async def calc(ctx):
+	joint = ctx.message.content[len(prefixes[str(ctx.guild.id)]) + 4:].replace(' ', '')
+	if not joint.isascii():
+		await ctx.send("{prefixes[str(ctx.guild.id)])}calc only accepts ASCII characters as input!")
+		return
+	illegal_chars = joint.
+	''.
+	# await ctx.send()
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #easter egg commands
@@ -488,21 +512,21 @@ async def hack(ctx, *, hackvic):
 	homeworkstorage = random.choice(hackhomework)
 	#send messages in a timely order
 	hack_message = await ctx.send(f"Hacking {hackvic}...")
-	await asyncio.sleep(2)
+	await time.sleep(2)
 	await hack_message.edit(content=f"Grabbing {homeworkstorage} 'Homework' folder...")
-	await asyncio.sleep(2)
+	await time.sleep(2)
 	await hack_message.edit(content=f"Selling data to {random.choice(hackcompanies)}...")
-	await asyncio.sleep(2)
+	await time.sleep(2)
 	await hack_message.edit(content=f"Laughing evilly...")
-	await asyncio.sleep(2)
+	await time.sleep(2)
 	await hack_message.edit(content="Bypassing Discord security...")
-	await asyncio.sleep(2)
+	await time.sleep(2)
 	await hack_message.edit(content=f"Email: {hackvic}hasnofriends@hotmail.com\nPassword: ihateyouihateyougodie")
-	await asyncio.sleep(2)
+	await time.sleep(2)
 	await hack_message.edit(content=f"Reporting {hackvic} for breaking Discord TOS...")
-	await asyncio.sleep(2)
+	await time.sleep(2)
 	await hack_message.edit(content=f"Payment recieved: {random.choice(hackpayment)}")
-	await asyncio.sleep(1)
+	await time.sleep(1)
 	await ctx.send(f"The 100% real hack is complete.")
 	await ctx.send(f"Homework folder size: {homeworkstorage}")
 
@@ -541,8 +565,11 @@ async def load(ctx, extension):
 async def unload(ctx, extension):
 	client.unload_extension(f'cogs.{extension}');
 
-for filename in os.listdir('./cogs'):
+for filename in os.listdir(f'{rundir}/cogs'):
 	if filename.endswith('.py'):
 		client.load_extension(f'cogs.{filename[:-3]}')
 
-client.run(config["discord_token"])
+if home == '/home/tent':
+	client.run(config['menotbot_token'])
+else:
+	client.run(config['omena_token'])
