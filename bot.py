@@ -407,7 +407,7 @@ async def close(ctx):
 #github link command (useful for if you lost the link or something)
 @client.command()
 async def github(ctx):
-	if ctx.author.id == (465816879072542720 or 437296242817761292 or 691668587005607957): #first id is mulfok, second is lenrik, third is wullie
+	if ctx.author.id == 437296242817761292 or 465816879072542720 or 691668587005607957: #first id is mulfok, second is lenrik, third is wullie
 		await ctx.author.send("Github (Private): https://github.com/MulfoK/omenabot1.0\nShh... Let's not leak our hard work!")
 		await ctx.send("You have been private messaged the github link. :white_check_mark:")
 		print("Github pulled up by developer.")
@@ -419,7 +419,7 @@ async def github(ctx):
 #todo command
 @client.command()
 async def todo(ctx):
-	if ctx.author.id == (465816879072542720 or 437296242817761292 or 691668587005607957): #first id is mulfok, second is lenrik, third is wullie
+	if ctx.author.id == 437296242817761292 or 465816879072542720 or 691668587005607957: #first id is mulfok, second is lenrik, third is wullie
 		await ctx.author.send("I feel sorry for you developers...\n" + \
 							  "```Our epic todo list:\n" + \
 							  "1: Integrate a music player into Omena\n" + \
@@ -435,13 +435,11 @@ async def todo(ctx):
 #alcohol command
 @client.command()
 async def alcohol(ctx):
-	if ctx.author.id == 397573419811602442: #karnage
+	if ctx.author.id == 397573419811602442 or 465816879072542720: #karnage 397573419811602442 465816879072542720
 		await ctx.send("Go drink alcohol you madman. :beer:")
-		return
 
 	else:
 		await ctx.send("This command isn't for you! :x:")
-		return
 
 ##################################################################
 #slap commands
