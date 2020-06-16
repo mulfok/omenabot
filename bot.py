@@ -384,7 +384,7 @@ async def unban(ctx, *, member):
 #Developer Commands
 ##################################################################
 #stops bot command
-@client.command(aliases=["quit", "exit"])
+@client.command(aliases=["quit", "exit", "stop"])
 #@commands.has_permissions(administrator=True)
 async def close(ctx):
 	attempt_id = ctx.author.id
