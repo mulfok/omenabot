@@ -445,7 +445,7 @@ async def join(ctx):
 		await ctx.send('Make sure to be connectaed to voice chat on this server.')
 
 #disconnect command
-@client.command()
+@client.command(aliases=["leave"])
 async def disconnect(ctx):
 	voice = ctx.author.voice
 	if not voice == None:
