@@ -118,19 +118,11 @@ async def on_member_remove(member):
 async def change_status():
 	await client.change_presence(activity=discord.Game(next(status)))
 
-<<<<<<< HEAD
 #@tasks.loop(seconds=10)
 #async def hail_theOwner():
 #	for guild in client.guilds:
 #		if random.randint(0, 99) == 0:
 #			await guild.text_channels[random.randint(0,len(guild.text_channels)-1)].send(f"Hail the great {guild.owner.name}, owner of this discord!")
-=======
-@tasks.loop(seconds=10)
-async def hail_theOwner():
-	for guild in client.guilds:
-		if random.randint(0, 999) == 0:
-			await guild.text_channels[random.randint(0,len(guild.text_channels)-1)].send(f"Hail the great {guild.owner.name}, owner of this discord!")
->>>>>>> b61677aba16fec0e3d80712cdbd7aeaae22f44a7
 
 #Commands area
 @client.command()
@@ -146,32 +138,20 @@ async def pingtrue(ctx):
 #the F command
 @client.command()
 async def f(ctx):
-<<<<<<< HEAD
-=======
-	#send image link
->>>>>>> b61677aba16fec0e3d80712cdbd7aeaae22f44a7
 	fauthor = ctx.message.author
 
 	fembed = discord.Embed(
 		colour = discord.Colour.red()
 	)
 	fembed.set_author(name="Paying respects...")
-<<<<<<< HEAD
 	fembed.set_image(url=f"{random.choice(responses['fresponses'])}")
-=======
-	fembed.set_image(url=f"{random.choice(responses['f'])}")
->>>>>>> b61677aba16fec0e3d80712cdbd7aeaae22f44a7
 
 	await ctx.send(embed=fembed)
 
 #Random Anime Song Command
 @client.command(aliases=["animesong"])
 async def randomanimesong(ctx):
-<<<<<<< HEAD
 	await ctx.send(f"The developers are not weebs I swear :eyes:\n{random.choice(responses['animeresponses'])}")
-=======
-	await ctx.send(f"The developers are not weebs I swear :eyes:\n{random.choice(responses['anime'])}")
->>>>>>> b61677aba16fec0e3d80712cdbd7aeaae22f44a7
 
 @client.command(aliases=['8ball', 'eightball'])
 async def _8ball(ctx, *, question):
@@ -404,7 +384,7 @@ async def unban(ctx, *, member):
 #Developer Commands
 ##################################################################
 #stops bot command
-@client.command(aliases=["quit", "exit", "stop"])
+@client.command(aliases=["quit", "exit"])
 #@commands.has_permissions(administrator=True)
 async def close(ctx):
 	attempt_id = ctx.author.id
