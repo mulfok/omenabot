@@ -39,5 +39,56 @@
 		"My sources say no.",
 		"Outlook not so good.",
 		"Very doubtful."
-	]
+	],
+	"jokes":[
+		["Why did the chicken cross the road?", "To get to the other side!"],
+		["Why can't cats use a computer?", "Because they're always chasing the mouse!"],
+		["What did the fish say when he swam into the wall?", "Dam."],
+		["Did you hear about the Italian chef?", "He pasta-way!"],
+		["Did you hear about the guy who invented knock-knock jokes?", "He won the no-bell prize!"]
+	],
+	"hack":{
+		"companies": [
+			"Mojang Studios",
+			"Epic Games",
+			"Microsoft",
+			"Roblox Studios",
+			"Google",
+			"Canonical",
+			"Facebook",
+			"theist mother"
+		],
+		"homework": [
+			"1GB",
+			"10GB",
+			"100GB",
+			"1TB",
+			"2TB",
+			"10TB",
+			"100TB",
+			"1PB"
+		],
+		"payment": [
+			"£1.00",
+			"£25.00",
+			"£50.00",
+			"£75.00",
+			"£100.00",
+			"£1000.00"
+		],
+		"mail_provider":[
+			"mail.ru",
+			"bk.ru",
+			"gmail.com",
+			"hotmail.com"
+		],
+		"mail_body":[
+			["",".legitmail"],
+			["",".hasnofriends"],
+			["awesome","dude"],
+			["the","acc"],
+			["","2021"],
+			["totaly","'slegitmail"]
+		]
+	}
 }
