@@ -28,7 +28,7 @@ home = os.getenv('HOME')
 
 now = time.gmtime()
 start_time = f'{now[0]}_{now[1]}_{now[2]}_{now[3]}_{now[4]}_{now[5]}'
-print(f"\nStarted at {start_time}")
+print(f"Started at {start_time}")
 logging.basicConfig(filename=f'{rundir}/logs/latest.log', level=logging.INFO)
 
 with open(f'{rundir}/private/prefixes.json', 'r') as f:
@@ -40,6 +40,7 @@ with open(f'{rundir}/private/bot.json') as file:
 	config = json.load(file)
 
 responses = {}
+
 with open(f"{rundir}/responselists.json") as file:
 	responses = json.load(file)
 
@@ -61,7 +62,7 @@ def close_logger():
 async def on_ready():
 	#set status, change activity and print ready and start loop
 	change_status.start()
-	hail_theOwner.start()
+	#hail_theOwner.start()
 	await client.change_presence(status=discord.Status.online, activity=discord.Game('~helpme for commands!'))
 	logging.info('Ready!')
 	logging.info(f'Logged in as {client.user.name}')
@@ -71,29 +72,29 @@ async def on_ready():
 #Set default command prefix on server join
 @client.event
 async def on_guild_join(guild):
-	with open('prefixes.json', 'r') as f:
+	with open(f'{rundir}/private/prefixes.json', 'r') as f:
 		prefixes = json.load(f)
 
 	prefixes[str(guild.id)] = '~'
 
-	with open('prefixes.json', 'w') as f:
+	with open(f'{rundir}/private/prefixes.json', 'w') as f:
 		json.dump(prefixes, f, indent=4)
 
 #Purge command prefix upon server leave
 @client.event
 async def on_guild_remove(guild):
-	with open('prefixes.json', 'r') as f:
+	with open(f'{rundir}/private/prefixes.json', 'r') as f:
 		prefixes = json.load(f)
 
 	prefixes.pop(str(guild.id))
 
-	with open('prefixes.json', 'w') as f:
+	with open(f'{rundir}/private/prefixes.json', 'w') as f:
 		json.dump(prefixes, f, indent=4)
 
 @client.command(aliases=["setprefix"])
 @commands.has_permissions(administrator=True)
 async def changeprefix(ctx, prefix):
-	with open('prefixes.json', 'r') as f:
+	with open(f'{rundir}/private/prefixes.json', 'r') as f:
 		prefixes = json.load(f)
 
 	logging.info(f'Prefix changed to {prefix} for server {ctx.guild.name} (ID {ctx.guild.id})')
@@ -101,7 +102,7 @@ async def changeprefix(ctx, prefix):
 	prefixes[str(ctx.guild.id)]['name'] = str(ctx.guild.name)
 	await ctx.send(f'Prefix changed to `{prefix}`! :white_check_mark:')
 
-	with open('prefixes.json', 'w') as f:
+	with open(f'{rundir}/private/prefixes.json', 'w') as f:
 		json.dump(prefixes, f, indent=4)
 
 @client.event
@@ -117,11 +118,11 @@ async def on_member_remove(member):
 async def change_status():
 	await client.change_presence(activity=discord.Game(next(status)))
 
-@tasks.loop(seconds=10)
-async def hail_theOwner():
-	for guild in client.guilds:
-		if random.randint(0, 99) == 0:
-			await guild.text_channels[random.randint(0,len(guild.text_channels)-1)].send(f"Hail the great {guild.owner.name}, owner of this discord!")
+#@tasks.loop(seconds=10)
+#async def hail_theOwner():
+#	for guild in client.guilds:
+#		if random.randint(0, 99) == 0:
+#			await guild.text_channels[random.randint(0,len(guild.text_channels)-1)].send(f"Hail the great {guild.owner.name}, owner of this discord!")
 
 #Commands area
 @client.command()
@@ -137,60 +138,25 @@ async def pingtrue(ctx):
 #the F command
 @client.command()
 async def f(ctx):
-	#send image link
-	fresponses=["https://cdn.discordapp.com/attachments/720598695191511110/720861011032408064/F.png",
-			    "https://cdn.discordapp.com/attachments/720598695191511110/721123893716189224/tenor.gif"
-			   ]
-
 	fauthor = ctx.message.author
 
 	fembed = discord.Embed(
 		colour = discord.Colour.red()
 	)
 	fembed.set_author(name="Paying respects...")
-	fembed.set_image(url=f"{random.choice(fresponses)}")
+	fembed.set_image(url=f"{random.choice(responses['fresponses'])}")
 
 	await ctx.send(embed=fembed)
 
 #Random Anime Song Command
-@client.command()
+@client.command(aliases=["animesong"])
 async def randomanimesong(ctx):
-	animeresponses=["https://www.youtube.com/watch?v=AYA8DRG8cFs",
-				    "https://www.youtube.com/watch?v=a78ijoi0G8s",
-					"https://www.youtube.com/watch?v=z1PWA11Ec3E",
-					"https://www.youtube.com/watch?v=79d4RHbNjOQ `MulfoK: Okay lol this one is reaallly bad`",
-					"https://www.youtube.com/watch?v=JBqxVX_LXvk",
-					"https://www.youtube.com/watch?v=lOfZLb33uCg `MulfoK: Totally an anime song`",
-					"https://www.youtube.com/watch?v=m2eXg19DjPw"
-				   ]
-	await ctx.send(f"The developers are not weebs I swear :eyes:\n{random.choice(animeresponses)}")
+	await ctx.send(f"The developers are not weebs I swear :eyes:\n{random.choice(responses['animeresponses'])}")
 
 @client.command(aliases=['8ball', 'eightball'])
 async def _8ball(ctx, *, question):
-	#list of repsonses
-	responses = ["It is certain.",
-				 "It is decidedly so.",
-				 "Without a doubt.",
-				 "Yes - definitely.",
-				 "You may rely on it.",
-				 "As I see it, yes.",
-				 "Most likely.",
-				 "Outlook good.",
-				 "Yes.",
-				 "Signs point to yes.",
-				 "Reply hazy, try again.",
-				 "Ask again later.",
-				 "Better not tell you now.",
-				 "Cannot predict now.",
-				 "Concentrate and ask again.",
-				 "Don't count on it.",
-				 "My reply is no.",
-				 "My sources say no.",
-				 "Outlook not so good.",
-				 "Very doubtful."
-				]
 	#output random answer
-	await ctx.send(f'Question: {question}\nAnswer: {random.choice(responses)}')
+	await ctx.send(f'Question: {question}\nAnswer: {random.choice(responses["8ball"])}')
 
 @client.command()
 async def trivia(ctx):
@@ -479,7 +445,7 @@ async def join(ctx):
 		await ctx.send('Make sure to be connectaed to voice chat on this server.')
 
 #disconnect command
-@client.command()
+@client.command(aliases=["leave"])
 async def disconnect(ctx):
 	voice = ctx.author.voice
 	if not voice == None:
