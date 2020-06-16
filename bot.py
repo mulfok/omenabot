@@ -9,38 +9,26 @@ from discord.ext import commands, tasks
 from discord.utils import get
 from itertools import cycle
 
-lq=True
-
 #grabs server prefix from each server
 def get_prefix(client, message):
+	with open(f'{rundir}/prefixes.json', 'r') as f:
+		prefixes = json.load(f)
 	
-	return prefixes[str(message.guild.id)]['prefix']
+	return prefixes[str(message.guild.id)]
 
 #Set bot command prefix!
 client = commands.Bot(command_prefix = get_prefix)
 
 client.remove_command('help')
-
 status = cycle(['help - Brings up commands', 'aboutme - Shows bot info', 'trivia - Fun facts!', 'changeprefix - Customise server prefix!'])
 
 rundir = pathlib.Path(__file__,).parent.absolute()
 home = os.getenv('HOME')
-youtube_dl.FileDownloader('https://www.youtube.com/watch?v=JBqxVX_LXvk',["nopart"])
-# player = discord.AudioSource(source)
-
-with open(f'{rundir}/private/prefixes.json', 'r') as f:
-	prefixes = json.load(f)
-	f.close()
 
 config = {}
 
-with open(f'{rundir}/private/bot.json') as file:
+with open(f'{rundir}/bot.json') as file:
 	config = json.load(file)
-	f.close()
-
-responses = {}
-with open(f"{rundir}/responselists.json") as file:
-	responses = json.load(file)
 
 #Various debug console message events
 @client.event
@@ -64,39 +52,35 @@ async def on_ready():
 #Set default command prefix on server join
 @client.event
 async def on_guild_join(guild):
-	with open(f'{rundir}/private/prefixes.json', 'r') as f:
+	with open('prefixes.json', 'r') as f:
 		prefixes = json.load(f)
 
-	prefixes[str(ctx.guild.id)]['prefix'] = prefix
-	prefixes[str(ctx.guild.id)]['name'] = str(ctx.guild.name)
+	prefixes[str(guild.id)] = '~'
 
-	with open(f'{rundir}/private/prefixes.json', 'w') as f:
+	with open('prefixes.json', 'w') as f:
 		json.dump(prefixes, f, indent=4)
 
 #Purge command prefix upon server leave
 @client.event
 async def on_guild_remove(guild):
-	with open(f'{rundir}/private/prefixes.json', 'r') as f:
+	with open('prefixes.json', 'r') as f:
 		prefixes = json.load(f)
 
 	prefixes.pop(str(guild.id))
 
-	with open(f'{rundir}/private/prefixes.json', 'w') as f:
+	with open('prefixes.json', 'w') as f:
 		json.dump(prefixes, f, indent=4)
 
-#music player
-
-@client.command(aliases=["setprefix"])
+@client.command()
 @commands.has_permissions(administrator=True)
 async def changeprefix(ctx, prefix):
-	with open(f'{rundir}/private/prefixes.json', 'r') as f:
+	with open('prefixes.json', 'r') as f:
 		prefixes = json.load(f)
 
-	prefixes[str(ctx.guild.id)]['prefix'] = prefix
-	prefixes[str(ctx.guild.id)]['name'] = str(ctx.guild.name)
+	prefixes[str(ctx.guild.id)] = prefix
 	await ctx.send(f'Prefix changed to `{prefix}`! :white_check_mark:')
 
-	with open(f'{rundir}/private/prefixes.json', 'w') as f:
+	with open('prefixes.json', 'w') as f:
 		json.dump(prefixes, f, indent=4)
 
 @client.event
@@ -127,7 +111,7 @@ async def pingtrue(ctx):
 @client.command()
 async def f(ctx):
 	#send image link
-	fresponses=["https://cdn.discord, messageapp.com/attachments/720598695191511110/720861011032408064/F.png",
+	fresponses=["https://cdn.discordapp.com/attachments/720598695191511110/720861011032408064/F.png",
 			    "https://cdn.discordapp.com/attachments/720598695191511110/721123893716189224/tenor.gif"
 			   ]
 
@@ -156,14 +140,54 @@ async def randomanimesong(ctx):
 
 @client.command(aliases=['8ball', 'eightball'])
 async def _8ball(ctx, *, question):
+	#list of repsonses
+	responses = ["It is certain.",
+				 "It is decidedly so.",
+				 "Without a doubt.",
+				 "Yes - definitely.",
+				 "You may rely on it.",
+				 "As I see it, yes.",
+				 "Most likely.",
+				 "Outlook good.",
+				 "Yes.",
+				 "Signs point to yes.",
+				 "Reply hazy, try again.",
+				 "Ask again later.",
+				 "Better not tell you now.",
+				 "Cannot predict now.",
+				 "Concentrate and ask again.",
+				 "Don't count on it.",
+				 "My reply is no.",
+				 "My sources say no.",
+				 "Outlook not so good.",
+				 "Very doubtful."
+				]
 	#output random answer
-	await ctx.send(f'Question: {question}\nAnswer: {random.choice(responses["8ball"])}')
+	await ctx.send(f'Question: {question}\nAnswer: {random.choice(responses)}')
 
 @client.command()
 async def trivia(ctx):
 	#list of repsonses
+	responsestrivia = ["Elephants can't jump!",
+					   "Quokkas are a marspial!",
+					   "MulfoK runs a dual boot of Kubuntu 20.04!",
+					   "Omena means 'apple' in Finnish!",
+					   "MulfoK is from Scotland!",
+					   "Flamingos get their pink colour from eating shrimp!",
+					   "Dolphins can't smell!",
+					   "There are 50 states in the USA!",
+					   "One Venus day is equal to 116 Earth days!",
+					   "A '#' is called an octothorp!",
+					   "A group of whales is called a pod!",
+					   "Jack-O'-lanterns were originally made with turnips, not pumpkins!",
+					   "<@465816879072542720> loves to bork up if statements!",
+					   "The blue M&M was introduced in 1995!",
+					   "Lenrik is not a good programmer!",
+					   "Bow down to Rib!",
+					   "Fingers don't have muscles!"
+					  ]
 	#output random answer
-	await ctx.send(f'{random.choice(responses["trivia"])}')
+	await ctx.send(f'{random.choice(responsestrivia)}')
 
 @client.command()
 async def help(ctx):
@@ -374,16 +398,17 @@ async def unban(ctx, *, member):
 ##################################################################
 #stops bot command
 @client.command(aliases=["quit", "exit", "stop"])
+#@commands.has_permissions(administrator=True)
 async def close(ctx):
 	attempt_id = ctx.author.id
 	if attempt_id == 465816879072542720 or attempt_id == 437296242817761292: #first id is mulfok, second is lenrik
 		await ctx.send("Shutting down... See ya! :lock:")
 		await client.close()
-		print(f'Bot Closed By {ctx.author.name} ID: {ctx.author.id}')
+		print(f'Bot Closed By Developer: {ctx.author.name} ID: {ctx.author.id}')
 
 	else:
 		await ctx.send("You're not a developer! :x:")
-		print(f"{ctx.author} (ID{ctx.author.id}) tried to close the bot!")
+		print(f"{ctx.author} (ID: {ctx.author.id}) tried to close the bot!")
 
 #github link command (useful for if you lost the link or something)
 @client.command()
@@ -400,43 +425,6 @@ async def github(ctx):
 		await ctx.send("You're not a developer! :x:")
 		print(f"{ctx.author} ID: {ctx.author.id} tried to pull up the Github link!")
 
-#join command
-@client.command()
-async def join(ctx):
-	voice = ctx.author.voice
-	if not voice == None:
-		await ctx.send(f'Connecting to {voice.channel.name}')
-		await voice.channel.connect()
-	else:
-		await ctx.send('Make sure to be connectaed to voice chat on this server.')
-
-#disconnect command
-@client.command()
-async def disconnect(ctx):
-	voice = ctx.author.voice
-	if not voice == None:
-		await ctx.send(f'Disconnecting from {voice.channel.name}')
-		await ctx.voice_client.disconnect()
-	else:
-		await ctx.send('Make sure to be connectaed to voice chat on this server.')
-
-# play?
-@client.command(aliases=["p"])
-async def play(ctx):
-	song = f'{rundir}/private/song.mp3'
-	if not ctx.voice_client == None:
-		source = discord.FFmpegOpusAudio(song)
-		await ctx.send(f'Playing: "{song}".')
-		await ctx.voice_client.play(source, after=looped)
-	else:
-		await ctx.send("Not connected to any voice chat.")
-
-# looped play
-async def looped(err):
-	print(err)
-	if lq:
-		await play()
-
 #todo command
 @client.command()
 async def todo(ctx):
@@ -452,19 +440,17 @@ async def todo(ctx):
 
 	else:
 		await ctx.send("You're not a developer! :x:")
-		print(f"{ctx.author} (ID{ctx.author.id}) tried to pull of the developer to-do list!")
-
+		print(f"{ctx.author} ID: {ctx.author.id} tried to pull of the developer to-do list!")
+#######################################################
 #calc command
 @client.command()
 async def calc(ctx):
-	joint = ctx.message.content[len(get_prefix('',ctx)) + 4:].replace(' ', '')
+	joint = ctx.message.content[len(prefixes[str(ctx.guild.id)]) + 4:].replace(' ', '')
 	if not joint.isascii():
-		await ctx.send(f"{get_prefix('',ctx)}calc only accepts ASCII characters as input!")
+		await ctx.send("{prefixes[str(ctx.guild.id)])}calc only accepts ASCII characters as input!")
 		return
-	elif len(joint.replace(["+", "-", "/", '\\',' % ',' ^ ',' * '],' ')) < 1:
-		await ctx.send(f'You should add atleast one digit to have calculation possible.')
-		return
-	# illegal_chars = joint.
+	illegal_chars = joint #There was a . here??
+	#''.
 	# await ctx.send()
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -531,21 +517,22 @@ async def hack(ctx, *, hackvic):
 	homeworkstorage = random.choice(hackhomework)
 	#send messages in a timely order
 	hack_message = await ctx.send(f"Hacking {hackvic}...")
-	time.sleep(2)
+	await asyncio.sleep(2)
 	await hack_message.edit(content=f"Grabbing {homeworkstorage} 'Homework' folder...")
-	time.sleep(2)
+	await asyncio.sleep(2)
 	await hack_message.edit(content=f"Selling data to {random.choice(hackcompanies)}...")
-	time.sleep(2)
-	await hack_message.edit(content=f"Laughing evilly...")
-	time.sleep(2)
-	await hack_message.edit(content="Bypassing Discord security...")
-	time.sleep(2)
-	await hack_message.edit(content=f"Email: {hackvic}hasnofriends@hotmail.com\nPassword: ihateyouihateyougodie")
-	time.sleep(2)
-	await hack_message.edit(content=f"Reporting {hackvic} for breaking Discord TOS...")
-	time.sleep(2)
+	await asyncio.sleep(2)
 	await hack_message.edit(content=f"Payment recieved: {random.choice(hackpayment)}")
-	time.sleep(1)
+	await asyncio.sleep(2)
+	await hack_message.edit(content="Bypassing Discord security...")
+	await asyncio.sleep(2)
+	await hack_message.edit(content=f"Email: {hackvic}hasnofriends@hotmail.com\nPassword: ihateyouihateyougodie")
+	await asyncio.sleep(2)
+	await hack_message.edit(content=f"Reporting {hackvic} for breaking Discord TOS...")
+	await asyncio.sleep(2)
+	await hack_message.edit(content=f"Laughing evilly...")
+	await asyncio.sleep(2)
+	await hack_message.edit(content=f"Laughing evilly...")
 	await ctx.send(f"The 100% real hack is complete.")
 	await ctx.send(f"Homework folder size: {homeworkstorage}")
 
