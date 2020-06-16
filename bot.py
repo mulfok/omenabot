@@ -71,29 +71,29 @@ async def on_ready():
 #Set default command prefix on server join
 @client.event
 async def on_guild_join(guild):
-	with open('prefixes.json', 'r') as f:
+	with open(f'{rundir}/private/prefixes.json', 'r') as f:
 		prefixes = json.load(f)
 
 	prefixes[str(guild.id)] = '~'
 
-	with open('prefixes.json', 'w') as f:
+	with open(f'{rundir}/private/prefixes.json', 'w') as f:
 		json.dump(prefixes, f, indent=4)
 
 #Purge command prefix upon server leave
 @client.event
 async def on_guild_remove(guild):
-	with open('prefixes.json', 'r') as f:
+	with open(f'{rundir}/private/prefixes.json', 'r') as f:
 		prefixes = json.load(f)
 
 	prefixes.pop(str(guild.id))
 
-	with open('prefixes.json', 'w') as f:
+	with open(f'{rundir}/private/prefixes.json', 'w') as f:
 		json.dump(prefixes, f, indent=4)
 
 @client.command(aliases=["setprefix"])
 @commands.has_permissions(administrator=True)
 async def changeprefix(ctx, prefix):
-	with open('prefixes.json', 'r') as f:
+	with open(f'{rundir}/private/prefixes.json', 'r') as f:
 		prefixes = json.load(f)
 
 	logging.info(f'Prefix changed to {prefix} for server {ctx.guild.name} (ID {ctx.guild.id})')
@@ -101,7 +101,7 @@ async def changeprefix(ctx, prefix):
 	prefixes[str(ctx.guild.id)]['name'] = str(ctx.guild.name)
 	await ctx.send(f'Prefix changed to `{prefix}`! :white_check_mark:')
 
-	with open('prefixes.json', 'w') as f:
+	with open(f'{rundir}/private/prefixes.json', 'w') as f:
 		json.dump(prefixes, f, indent=4)
 
 @client.event
@@ -149,7 +149,7 @@ async def f(ctx):
 	await ctx.send(embed=fembed)
 
 #Random Anime Song Command
-@client.command()
+@client.command(aliases=["animesong"])
 async def randomanimesong(ctx):
 	await ctx.send(f"The developers are not weebs I swear :eyes:\n{random.choice(responses['anime'])}")
 
@@ -439,8 +439,11 @@ async def todo(ctx):
 async def join(ctx):
 	voice = ctx.author.voice
 	if not voice == None:
-		await ctx.send(f'Connecting to {voice.channel.name}')
-		await voice.channel.connect()
+		if ctx.voice_client == None:
+			await ctx.send(f'Connecting to {voice.channel.name}')
+			await voice.channel.connect()
+		else:
+			await ctx.send("I'm alredy connected, dumdum.")
 	else:
 		await ctx.send('Make sure to be connectaed to voice chat on this server.')
 
@@ -449,8 +452,11 @@ async def join(ctx):
 async def disconnect(ctx):
 	voice = ctx.author.voice
 	if not voice == None:
-		await ctx.send(f'Disconnecting from {voice.channel.name}')
-		await ctx.voice_client.disconnect()
+		if not ctx.voice_client == None:
+			await ctx.send(f'Disconnecting from {voice.channel.name}')
+			await ctx.voice_client.disconnect()
+		else:
+			await ctx.send("I'm alredy disconnected, dumdum.")
 	else:
 		await ctx.send('Make sure to be connectaed to voice chat on this server.')
 
