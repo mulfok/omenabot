@@ -216,6 +216,7 @@ async def help(ctx):
 	helpembed.add_field(name="randomanimesong", value="Sends a random anime song.", inline=False)
 	helpembed.add_field(name="github", value="Private messages github link. (Developer only command)", inline=False)
 	helpembed.add_field(name="todo", value="Private messages bot to-do list. (Developer only command)", inline=False)
+	helpembed.add_field(name="joke", value="Tells a joke!", inline=False)
 	helpembed.set_thumbnail(url="https://cdn.discordapp.com/attachments/720598695191511110/721769409139703938/OmenaLogo.png")
 
 	await ctx.send(embed=helpembed)
@@ -534,9 +535,26 @@ async def hack(ctx, *, hackvic):
 	await hack_message.edit(content=f"Laughing evilly...")
 	await ctx.send(f"The 100% real hack is complete.")
 	await ctx.send(f"Homework folder size: {homeworkstorage}")
+
 @client.command()
 async def slap(ctx, *, arg):
 	await ctx.send(f"Slapped {arg}!")
+
+#joke command
+@client.command()
+async def joke(ctx):
+	jokes = [("Why did the chicken cross the road?", "To get to the other side!"),
+		  	 ("Why can't cats use a computer?", "Because they're always chasing the mouse!"),
+			 ("What did the fish say when he swam into the wall?", "Dam."),
+			 ("Did you hear about the Italian chef?", "He pasta-way!"),
+			 ("Did you hear about the guy who invented knock-knock jokes?", "He won the no-bell prize!")
+		    ]
+	
+	joke, punchline = random.choice(jokes)
+	await ctx.send(joke)
+	await asyncio.sleep(2)
+	await ctx.send(punchline)
+
 #-----------------------------------
 #error catch area
 @client.event
