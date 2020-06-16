@@ -557,7 +557,6 @@ async def hack(ctx, *, hackvic):
 	#send messages in a timely order
 	hack_message = await ctx.send(f"Hacking {hackvic}...")
 	time.sleep(2)
-	await message.delete()
 	await hack_message.edit(content=f"Grabbing {homeworkstorage} 'Homework' folder...")
 	time.sleep(2)
 	await hack_message.edit(content=f'Selling data to {random.choice(responses["hack"]["companies"])}...')
