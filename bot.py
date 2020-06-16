@@ -71,21 +71,6 @@ async def on_guild_remove(guild):
 	with open('prefixes.json', 'w') as f:
 		json.dump(prefixes, f, indent=4)
 
-#music player
-@client.command(pass_context=True, aliases = ["j, joi"])
-async def join(ctx):
-	global voice
-	vchannel = ctx.message.author.voice.vchannel
-	voice = get(bot.voice_clients, guild=ctx.guild)
-
-	if voice and voice.is_connected():
-		await voice.move_to(vchannel)
-	
-	else:
-		voice = await channel.connect()
-
-	await ctx.send(f"Connected to {vchannel}! :white_check_mark:")
-
 @client.command()
 @commands.has_permissions(administrator=True)
 async def changeprefix(ctx, prefix):
