@@ -459,8 +459,11 @@ async def todo(ctx):
 async def join(ctx):
 	voice = ctx.author.voice
 	if not voice == None:
-		await ctx.send(f'Connecting to {voice.channel.name}')
-		await voice.channel.connect()
+		if ctx.voice_client == None:
+			await ctx.send(f'Connecting to {voice.channel.name}')
+			await voice.channel.connect()
+		else:
+			await ctx.send("I'm alredy connected, dumdum.")
 	else:
 		await ctx.send('Make sure to be connectaed to voice chat on this server.')
 
@@ -469,8 +472,11 @@ async def join(ctx):
 async def disconnect(ctx):
 	voice = ctx.author.voice
 	if not voice == None:
-		await ctx.send(f'Disconnecting from {voice.channel.name}')
-		await ctx.voice_client.disconnect()
+		if not ctx.voice_client == None:
+			await ctx.send(f'Disconnecting from {voice.channel.name}')
+			await ctx.voice_client.disconnect()
+		else:
+			await ctx.send("I'm alredy disconnected, dumdum.")
 	else:
 		await ctx.send('Make sure to be connectaed to voice chat on this server.')
 
