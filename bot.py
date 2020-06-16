@@ -194,7 +194,6 @@ async def help(ctx):
 	helpembed.add_field(name="joke", value="Tells a joke!", inline=False)
 	helpembed.set_thumbnail(url="https://cdn.discordapp.com/attachments/720598695191511110/721769409139703938/OmenaLogo.png")
 
-	await message.delete()
 	await ctx.send(embed=helpembed)
 
 @client.command()
