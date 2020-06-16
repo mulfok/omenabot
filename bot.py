@@ -21,8 +21,6 @@ client = commands.Bot(command_prefix = get_prefix)
 
 client.remove_command('help')
 
-# player = discord.AudioSource
-
 status = cycle(['help - Brings up commands', 'aboutme - Shows bot info', 'trivia - Fun facts!', 'changeprefix - Customise server prefix!'])
 
 rundir = pathlib.Path(__file__,).parent.absolute()
@@ -39,6 +37,10 @@ config = {}
 with open(f'{rundir}/private/bot.json') as file:
 	config = json.load(file)
 	f.close()
+
+responses = {}
+with open(f"{rundir}/responselists.json") as file:
+	responses = json.load(file)
 
 #Various debug console message events
 @client.event
@@ -154,54 +156,14 @@ async def randomanimesong(ctx):
 
 @client.command(aliases=['8ball', 'eightball'])
 async def _8ball(ctx, *, question):
-	#list of repsonses
-	responses = ["It is certain.",
-				 "It is decidedly so.",
-				 "Without a doubt.",
-				 "Yes - definitely.",
-				 "You may rely on it.",
-				 "As I see it, yes.",
-				 "Most likely.",
-				 "Outlook good.",
-				 "Yes.",
-				 "Signs point to yes.",
-				 "Reply hazy, try again.",
-				 "Ask again later.",
-				 "Better not tell you now.",
-				 "Cannot predict now.",
-				 "Concentrate and ask again.",
-				 "Don't count on it.",
-				 "My reply is no.",
-				 "My sources say no.",
-				 "Outlook not so good.",
-				 "Very doubtful."
-				]
 	#output random answer
-	await ctx.send(f'Question: {question}\nAnswer: {random.choice(responses)}')
+	await ctx.send(f'Question: {question}\nAnswer: {random.choice(responses["8ball"])}')
 
 @client.command()
 async def trivia(ctx):
 	#list of repsonses
-	responsestrivia = ["Elephants can't jump!",
-					   "Quokkas are a marspial!",
-					   "MulfoK runs a dual boot of Kubuntu 20.04!",
-					   "Omena means 'apple' in Finnish!",
-					   "MulfoK is from Scotland!",
-					   "Flamingos get their pink colour from eating shrimp!",
-					   "Dolphins can't smell!",
-					   "There are 50 states in the USA!",
-					   "One Venus day is equal to 116 Earth days!",
-					   "A '#' is called an octothorp!",
-					   "A group of whales is called a pod!",
-					   "Jack-O'-lanterns were originally made with turnips, not pumpkins!",
-					   "<@465816879072542720> loves to bork up if statements!",
-					   "The blue M&M was introduced in 1995!",
-					   "Lenrik is not a good programmer!",
-					   "Bow down to Rib!",
-					   "Fingers don't have muscles!"
-					  ]
 	#output random answer
-	await ctx.send(f'{random.choice(responsestrivia)}')
+	await ctx.send(f'{random.choice(responses["trivia"])}')
 
 @client.command()
 async def help(ctx):
@@ -412,13 +374,12 @@ async def unban(ctx, *, member):
 ##################################################################
 #stops bot command
 @client.command(aliases=["quit", "exit", "stop"])
-#@commands.has_permissions(administrator=True)
 async def close(ctx):
 	attempt_id = ctx.author.id
 	if attempt_id == 465816879072542720 or attempt_id == 437296242817761292: #first id is mulfok, second is lenrik
 		await ctx.send("Shutting down... See ya! :lock:")
 		await client.close()
-		print(f'Bot Closed By Developer: {ctx.author.name} ID: {ctx.author.id}')
+		print(f'Bot Closed By {ctx.author.name} ID: {ctx.author.id}')
 
 	else:
 		await ctx.send("You're not a developer! :x:")
