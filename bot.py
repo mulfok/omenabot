@@ -120,7 +120,7 @@ async def change_status():
 @tasks.loop(seconds=10)
 async def hail_theOwner():
 	for guild in client.guilds:
-		if random.randint(0, 99) == 0:
+		if random.randint(0, 999) == 0:
 			await guild.text_channels[random.randint(0,len(guild.text_channels)-1)].send(f"Hail the great {guild.owner.name}, owner of this discord!")
 
 #Commands area
@@ -138,59 +138,25 @@ async def pingtrue(ctx):
 @client.command()
 async def f(ctx):
 	#send image link
-	fresponses=["https://cdn.discordapp.com/attachments/720598695191511110/720861011032408064/F.png",
-			    "https://cdn.discordapp.com/attachments/720598695191511110/721123893716189224/tenor.gif"
-			   ]
-
 	fauthor = ctx.message.author
 
 	fembed = discord.Embed(
 		colour = discord.Colour.red()
 	)
 	fembed.set_author(name="Paying respects...")
-	fembed.set_image(url=f"{random.choice(fresponses)}")
+	fembed.set_image(url=f"{random.choice(responses['f'])}")
 
 	await ctx.send(embed=fembed)
 
 #Random Anime Song Command
 @client.command()
 async def randomanimesong(ctx):
-	animeresponses=["https://www.youtube.com/watch?v=AYA8DRG8cFs",
-				    "https://www.youtube.com/watch?v=a78ijoi0G8s",
-					"https://www.youtube.com/watch?v=z1PWA11Ec3E",
-					"https://www.youtube.com/watch?v=79d4RHbNjOQ `MulfoK: Okay lol this one is reaallly bad`",
-					"https://www.youtube.com/watch?v=JBqxVX_LXvk",
-					"https://www.youtube.com/watch?v=lOfZLb33uCg `MulfoK: Totally an anime song`",
-					"https://www.youtube.com/watch?v=m2eXg19DjPw"
-				   ]
-	await ctx.send(f"The developers are not weebs I swear :eyes:\n{random.choice(animeresponses)}")
+	await ctx.send(f"The developers are not weebs I swear :eyes:\n{random.choice(responses['anime'])}")
 
 @client.command(aliases=['8ball', 'eightball'])
 async def _8ball(ctx, *, question):
-	#list of repsonses
-	responses = ["It is certain.",
-				 "It is decidedly so.",
-				 "Without a doubt.",
-				 "Yes - definitely.",
-				 "You may rely on it.",
-				 "As I see it, yes.",
-				 "Most likely.",
-				 "Outlook good.",
-				 "Yes.",
-				 "Signs point to yes.",
-				 "Reply hazy, try again.",
-				 "Ask again later.",
-				 "Better not tell you now.",
-				 "Cannot predict now.",
-				 "Concentrate and ask again.",
-				 "Don't count on it.",
-				 "My reply is no.",
-				 "My sources say no.",
-				 "Outlook not so good.",
-				 "Very doubtful."
-				]
 	#output random answer
-	await ctx.send(f'Question: {question}\nAnswer: {random.choice(responses)}')
+	await ctx.send(f'Question: {question}\nAnswer: {random.choice(responses["8ball"])}')
 
 @client.command()
 async def trivia(ctx):
