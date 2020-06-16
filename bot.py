@@ -13,30 +13,26 @@ lq=True
 
 #grabs server prefix from each server
 def get_prefix(client, message):
-	
+	if not prefixes[str(message.guild.id)]['prefix']:
+		return '~'
 	return prefixes[str(message.guild.id)]['prefix']
 
 #Set bot command prefix!
 client = commands.Bot(command_prefix = get_prefix)
 
 client.remove_command('help')
-
 status = cycle(['help - Brings up commands', 'aboutme - Shows bot info', 'trivia - Fun facts!', 'changeprefix - Customise server prefix!'])
 
 rundir = pathlib.Path(__file__,).parent.absolute()
 home = os.getenv('HOME')
-youtube_dl.FileDownloader('https://www.youtube.com/watch?v=JBqxVX_LXvk',["nopart"])
-# player = discord.AudioSource(source)
 
 with open(f'{rundir}/private/prefixes.json', 'r') as f:
 	prefixes = json.load(f)
-	f.close()
 
 config = {}
 
 with open(f'{rundir}/private/bot.json') as file:
 	config = json.load(file)
-	f.close()
 
 responses = {}
 with open(f"{rundir}/responselists.json") as file:
@@ -84,8 +80,6 @@ async def on_guild_remove(guild):
 	with open(f'{rundir}/private/prefixes.json', 'w') as f:
 		json.dump(prefixes, f, indent=4)
 
-#music player
-
 @client.command(aliases=["setprefix"])
 @commands.has_permissions(administrator=True)
 async def changeprefix(ctx, prefix):
@@ -127,7 +121,7 @@ async def pingtrue(ctx):
 @client.command()
 async def f(ctx):
 	#send image link
-	fresponses=["https://cdn.discord, messageapp.com/attachments/720598695191511110/720861011032408064/F.png",
+	fresponses=["https://cdn.discordapp.com/attachments/720598695191511110/720861011032408064/F.png",
 			    "https://cdn.discordapp.com/attachments/720598695191511110/721123893716189224/tenor.gif"
 			   ]
 
@@ -161,7 +155,6 @@ async def _8ball(ctx, *, question):
 
 @client.command()
 async def trivia(ctx):
-	#list of repsonses
 	#output random answer
 	await ctx.send(f'{random.choice(responses["trivia"])}')
 
@@ -324,15 +317,15 @@ async def mcmd3(ctx):
 @commands.has_permissions(manage_messages=True)
 async def clear(ctx, amount : int):
 	if amount < 1:
-		await ctx.send("That's not a valid arguement! :x:")
+		await ctx.send("That's not a valid arguement! :negative_squared_cross_mark:")
 	elif amount > 100:
-		await ctx.send("Purge limit is 100! :x:")
+		await ctx.send("Purge limit is 100! :negative_squared_cross_mark:")
 	else:
 		await ctx.channel.purge(limit=amount)
 
 @client.command()
 async def aboutme(ctx):
-	await ctx.send("```Omena!BOT a4.0.5\n" + \
+	await ctx.send("```\nOmena!BOT a4.0.5\n" + \
 				   "Developed by:\n" + \
 				   "MulfoK: Lead Programmer\n" + \
 				   "lenrik1589: Programmer\n" + \
@@ -383,7 +376,7 @@ async def close(ctx):
 
 	else:
 		await ctx.send("You're not a developer! :x:")
-		print(f"{ctx.author} (ID{ctx.author.id}) tried to close the bot!")
+		print(f"{ctx.author} (ID:{ctx.author.id}) tried to close the bot!")
 
 #github link command (useful for if you lost the link or something)
 @client.command()
@@ -398,7 +391,26 @@ async def github(ctx):
 
 	else:
 		await ctx.send("You're not a developer! :x:")
-		print(f"{ctx.author} ID: {ctx.author.id} tried to pull up the Github link!")
+		print(f"{ctx.author} (ID{ctx.author.id}) tried to pull up github link!")
+
+#todo command
+@client.command()
+async def todo(ctx):
+	attempt_id = ctx.author.id
+	if attempt_id == 437296242817761292 or attempt_id == 465816879072542720 or attempt_id == 691668587005607957 or attempt_id == 634189650608652310: #first id is mulfok, second is lenrik, third is wullie, fourth is brady
+		await ctx.author.send("I feel sorry for you developers...\n" + \
+							  "```Our epic todo list:\n" + \
+							  "1: Integrate a music player into Omena\n" + \
+							  "2: Get a ~calc command working\n```"
+							 )
+		await ctx.send("The developer to-do list has been private messaged to you! :white_check_mark:")
+		print(f"Todo list pulled up by {ctx.author} ID: {ctx.author.id}")
+
+	else:
+		await ctx.send("You're not a developer! :x:")
+		print(f"{ctx.author} (ID{ctx.author.id}) tried to pull of the developer to-do list!")
+#######################################################
+# musi
 
 #join command
 @client.command()
@@ -437,26 +449,11 @@ async def looped(err):
 	if lq:
 		await play()
 
-#todo command
-@client.command()
-async def todo(ctx):
-	attempt_id = ctx.author.id
-	if attempt_id == 437296242817761292 or attempt_id == 465816879072542720 or attempt_id == 691668587005607957 or attempt_id == 634189650608652310: #first id is mulfok, second is lenrik, third is wullie, fourth is brady
-		await ctx.author.send("I feel sorry for you developers...\n" + \
-							  "```Our epic todo list:\n" + \
-							  "1: Integrate a music player into Omena\n" + \
-							  "2: Get a ~calc command working\n```"
-							 )
-		await ctx.send("The developer to-do list has been private messaged to you! :white_check_mark:")
-		print(f"Todo list pulled up by {ctx.author} ID: {ctx.author.id}")
-
-	else:
-		await ctx.send("You're not a developer! :x:")
-		print(f"{ctx.author} (ID{ctx.author.id}) tried to pull of the developer to-do list!")
-
+#######################################################
 #calc command
 @client.command()
 async def calc(ctx):
+	result='calc command is not done yet. :P'
 	joint = ctx.message.content[len(get_prefix('',ctx)) + 4:].replace(' ', '')
 	if not joint.isascii():
 		await ctx.send(f"{get_prefix('',ctx)}calc only accepts ASCII characters as input!")
@@ -464,8 +461,7 @@ async def calc(ctx):
 	elif len(joint.replace(["+", "-", "/", '\\',' % ',' ^ ',' * '],' ')) < 1:
 		await ctx.send(f'You should add atleast one digit to have calculation possible.')
 		return
-	# illegal_chars = joint.
-	# await ctx.send()
+	await ctx.send(result)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #easter egg commands
@@ -499,36 +495,8 @@ async def _if(ctx):
 #hack command
 @client.command()
 async def hack(ctx, *, hackvic):
-	#setup random responses array
-	hackcompanies = ["Mojang Studios",
-					"Epic Games",
-					"Microsoft",
-					"Roblox Studios",
-					"Google",
-					"Canonical",
-					"Facebook",
-					"theist mother"
-					]
-
-	hackhomework = ["1GB",
-				    "10GB",
-					"100GB",
-					"1TB",
-					"2TB",
-					"10TB",
-					"100TB",
-					"1PB"
-				   ]
-
-	hackpayment = ["£1.00",
-				   "£25.00",
-				   "£50.00",
-				   "£75.00",
-				   "£100.00",
-				   "£1000.00"
-				]
 	#store homework amount in temp variable
-	homeworkstorage = random.choice(hackhomework)
+	homeworkstorage = random.choice(responses["hack"]["homework"])
 	#send messages in a timely order
 	hack_message = await ctx.send(f"Hacking {hackvic}...")
 	time.sleep(2)
@@ -546,6 +514,7 @@ async def hack(ctx, *, hackvic):
 	time.sleep(2)
 	await hack_message.edit(content=f"Payment recieved: {random.choice(hackpayment)}")
 	time.sleep(1)
+	await hack_message.edit(content=f"Laughing evilly...")
 	await ctx.send(f"The 100% real hack is complete.")
 	await ctx.send(f"Homework folder size: {homeworkstorage}")
 
@@ -556,16 +525,10 @@ async def slap(ctx, *, arg):
 #joke command
 @client.command()
 async def joke(ctx):
-	jokes = [("Why did the chicken cross the road?", "To get to the other side!"),
-		  	 ("Why can't cats use a computer?", "Because they're always chasing the mouse!"),
-			 ("What did the fish say when he swam into the wall?", "Dam."),
-			 ("Did you hear about the Italian chef?", "He pasta-way!"),
-			 ("Did you hear about the guy who invented knock-knock jokes?", "He won the no-bell prize!")
-		    ]
 	
-	joke, punchline = random.choice(jokes)
+	joke, punchline = random.choice(responses["jokes"])
 	await ctx.send(joke)
-	await asyncio.sleep(2)
+	time.sleep(2)
 	await ctx.send(punchline)
 
 #-----------------------------------
