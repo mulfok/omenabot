@@ -356,7 +356,7 @@ async def clear(ctx, amount : int):
 
 @client.command()
 async def aboutme(ctx):
-	await ctx.send("```Omena!BOT a4.0.5\n" + \
+	await ctx.send("```\nOmena!BOT a4.0.5\n" + \
 				   "Developed by:\n" + \
 				   "MulfoK: Lead Programmer\n" + \
 				   "lenrik1589: Programmer\n" + \
@@ -547,7 +547,10 @@ async def joke(ctx):
 		  	 ("Why can't cats use a computer?", "Because they're always chasing the mouse!"),
 			 ("What did the fish say when he swam into the wall?", "Dam."),
 			 ("Did you hear about the Italian chef?", "He pasta-way!"),
-			 ("Did you hear about the guy who invented knock-knock jokes?", "He won the no-bell prize!")
+			 ("Did you hear about the guy who invented knock-knock jokes?", "He won the no-bell prize!"),
+			 ("What's red and bad for your teeth?", "A brick."),
+			 ("Why can't a pterodactyl use the bathroom?", "Because the 'p' is silent."),
+			 ("How do you make holy water?", "You boil the hell out of it!")
 		    ]
 	
 	joke, punchline = random.choice(jokes)
