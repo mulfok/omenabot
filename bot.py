@@ -124,7 +124,7 @@ async def change_status():
 async def hail_theOwner():
 	for guild in client.guilds:
 		if random.randint(0, 99) == 0:
-			guild.text_channels[random.randint(0,len(guild.text_channels))].send(f"Hail the great {guild.owner.name}, owner of this discord!")
+			await guild.text_channels[random.randint(0,len(guild.text_channels)-1)].send(f"Hail the great {guild.owner.name}, owner of this discord!")
 
 #Commands area
 @client.command()
