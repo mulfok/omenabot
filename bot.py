@@ -453,7 +453,7 @@ async def disconnect(ctx):
 	voice = ctx.author.voice
 	if not voice == None:
 		if not ctx.voice_client == None:
-			await ctx.send(f'Disconnecting from {voice.channel.name}! :music_note:')
+			await ctx.send(f'Disconnecting from {voice.channel.name}! :musical_note:')
 			await ctx.voice_client.disconnect()
 		else:
 			await ctx.send("I'm not connected to a voice channel! :x:")
@@ -487,7 +487,7 @@ async def calc(ctx):
 		await ctx.send("{prefixes[str(ctx.guild.id)])}calc only accepts ASCII characters as input!")
 		return
 	elif len(joint.replace(["+", "-", "/", '\\',' % ',' ^ ',' * '],' ')) < 1:
-		await ctx.send(f'You should add atleast one digit to have calculation possible.')
+		await ctx.send(f'There should be at least one digit! :x:')
 		return
 	await ctx.send(result)
 
