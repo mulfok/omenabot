@@ -72,6 +72,19 @@ async def on_guild_remove(guild):
 		json.dump(prefixes, f, indent=4)
 
 #music player
+@client.command(pass_context=True, aliases = ["j, joi"])
+async def join(ctx):
+	global voice
+	vchannel = ctx.message.author.voice.vchannel
+	voice = get(bot.voice_clients, guild=ctx.guild)
+
+	if voice and voice.is_connected():
+		await voice.move_to(vchannel)
+	
+	else:
+		voice = await channel.connect()
+
+	await ctx.send(f"Connected to {vchannel}! :white_check_mark:")
 
 @client.command()
 @commands.has_permissions(administrator=True)
@@ -361,6 +374,7 @@ async def aboutme(ctx):
 				   "Developed by:\n" + \
 				   "MulfoK: Lead Programmer\n" + \
 				   "lenrik1589: Programmer\n" + \
+				   "Brady: Music Programmer(?)\n" + \
 				   "General Purpose Discord Bot\n" + \
 				   "Written in Python 3.8.2\n" + \
 				   "help for commands list (~ is default prefix)```")
@@ -371,7 +385,6 @@ async def aboutme(ctx):
 async def kick(ctx, member : discord.Member, *, reason=None):
 	await member.kick(reason=reason)
 	await ctx.send(f'{member.mention} was kicked from the server. :hammer:')
-	print(f'{member} was kicked from a server!')
 
 @client.command()
 @commands.has_permissions(administrator=True)
@@ -518,22 +531,24 @@ async def hack(ctx, *, hackvic):
 	homeworkstorage = random.choice(hackhomework)
 	#send messages in a timely order
 	hack_message = await ctx.send(f"Hacking {hackvic}...")
-	await time.sleep(2)
+	await asyncio.sleep(2)
 	await hack_message.edit(content=f"Grabbing {homeworkstorage} 'Homework' folder...")
-	await time.sleep(2)
+	await asyncio.sleep(2)
 	await hack_message.edit(content=f"Selling data to {random.choice(hackcompanies)}...")
-	await time.sleep(2)
-	await hack_message.edit(content=f"Laughing evilly...")
-	await time.sleep(2)
-	await hack_message.edit(content="Bypassing Discord security...")
-	await time.sleep(2)
-	await hack_message.edit(content=f"Email: {hackvic}hasnofriends@hotmail.com\nPassword: ihateyouihateyougodie")
-	await time.sleep(2)
-	await hack_message.edit(content=f"Reporting {hackvic} for breaking Discord TOS...")
-	await time.sleep(2)
+	await asyncio.sleep(2)
 	await hack_message.edit(content=f"Payment recieved: {random.choice(hackpayment)}")
-	await time.sleep(1)
+	await asyncio.sleep(2)
+	await hack_message.edit(content="Bypassing Discord security...")
+	await asyncio.sleep(2)
+	await hack_message.edit(content=f"Email: {hackvic}hasnofriends@hotmail.com\nPassword: ihateyouihateyougodie")
+	await asyncio.sleep(2)
+	await hack_message.edit(content=f"Reporting {hackvic} for breaking Discord TOS...")
+	await asyncio.sleep(2)
+	await hack_message.edit(content=f"Laughing evilly...")
+	await asyncio.sleep(2)
+	await hack_message.edit(content=f"Laughing evilly...")
 	await ctx.send(f"The 100% real hack is complete.")
+	await ctx.send(f"Homework folder size: {homeworkstorage}")
 @client.command()
 async def slap(ctx, *, arg):
 	await ctx.send(f"Slapped {arg}!")
