@@ -440,12 +440,12 @@ async def join(ctx):
 	voice = ctx.author.voice
 	if not voice == None:
 		if ctx.voice_client == None:
-			await ctx.send(f'Connecting to {voice.channel.name}')
+			await ctx.send(f'Connecting to {voice.channel.name}! :notes:')
 			await voice.channel.connect()
 		else:
-			await ctx.send("I'm alredy connected, dumdum.")
+			await ctx.send(f"I'm already connected to {voice.channel.name}! :x:")
 	else:
-		await ctx.send('Make sure to be connectaed to voice chat on this server.')
+		await ctx.send('You need to be in a voice channel to run this command! :x:')
 
 #disconnect command
 @client.command(aliases=["leave"])
@@ -453,12 +453,12 @@ async def disconnect(ctx):
 	voice = ctx.author.voice
 	if not voice == None:
 		if not ctx.voice_client == None:
-			await ctx.send(f'Disconnecting from {voice.channel.name}')
+			await ctx.send(f'Disconnecting from {voice.channel.name}! :music_note:')
 			await ctx.voice_client.disconnect()
 		else:
-			await ctx.send("I'm alredy disconnected, dumdum.")
+			await ctx.send("I'm not connected to a voice channel! :x:")
 	else:
-		await ctx.send('Make sure to be connectaed to voice chat on this server.')
+		await ctx.send('You need to be in a voice channel to run this command! :x:')
 
 # play?
 @client.command(aliases=["p"])
@@ -466,10 +466,10 @@ async def play(ctx):
 	song = f'{rundir}/private/song.mp3'
 	if not ctx.voice_client == None:
 		source = discord.FFmpegOpusAudio(song)
-		await ctx.send(f'Playing: "{song}".')
+		await ctx.send(f'Playing: `{song}`! :notes:')
 		await ctx.voice_client.play(source, after=looped)
 	else:
-		await ctx.send("Not connected to any voice chat.")
+		await ctx.send("I'm not connected to a voice channel! :x:")
 
 # looped play
 async def looped(err):
