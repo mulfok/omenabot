@@ -5,6 +5,8 @@ import pathlib
 import json
 import youtube_dl
 import asyncio
+import time
+import logging
 from discord.ext import commands, tasks
 from discord.utils import get
 from itertools import cycle
@@ -26,6 +28,11 @@ status = cycle(['help - Brings up commands', 'aboutme - Shows bot info', 'trivia
 rundir = pathlib.Path(__file__,).parent.absolute()
 home = os.getenv('HOME')
 
+now = time.gmtime()
+start_time = f'{now[0]}_{now[1]}_{now[2]}_{now[3]}_{now[4]}_{now[5]}'
+print(f"\nStarted at {start_time}")
+logging.basicConfig(filename=f'{rundir}/logs/latest.log', level=logging.INFO)
+
 with open(f'{rundir}/private/prefixes.json', 'r') as f:
 	prefixes = json.load(f)
 
@@ -41,21 +48,27 @@ with open(f"{rundir}/responselists.json") as file:
 #Various debug console message events
 @client.event
 async def on_connect():
-	print('Connected to discord...')
+	logging.atexit.register(close_logger)
+	logging.info('Connected to discord...')
 
 @client.event
-async def on_disconnect(): 
-	print('Disconnected from discord.')
+async def on_disconnect():
+	logging.info('Disconnected from discord.')
+	logging.shutdown()
+
+def close_logger():
+	os.rename(f'{rundir}/logs/latest.log',f'{rundir}/logs/{start_time}.log')
 
 @client.event
 async def on_ready():
 	#set status, change activity and print ready and start loop
 	change_status.start()
+	hail_theOwner.start()
 	await client.change_presence(status=discord.Status.online, activity=discord.Game('~helpme for commands!'))
-	print('Ready!')
-	print(f'Logged in as {client.user.name}')
-	print(f'Client ID: {client.user.id}')
-	print('---------')
+	logging.info('Ready!')
+	logging.info(f'Logged in as {client.user.name}')
+	logging.info(f'Client ID: {client.user.id}')
+	logging.info('---------')
 
 #Set default command prefix on server join
 @client.event
@@ -86,6 +99,7 @@ async def changeprefix(ctx, prefix):
 	with open(f'{rundir}/private/prefixes.json', 'r') as f:
 		prefixes = json.load(f)
 
+	logging.info(f'Prefix changed to {prefix} for server {ctx.guild.name} (ID {ctx.guild.id})')
 	prefixes[str(ctx.guild.id)]['prefix'] = prefix
 	prefixes[str(ctx.guild.id)]['name'] = str(ctx.guild.name)
 	await ctx.send(f'Prefix changed to `{prefix}`! :white_check_mark:')
@@ -106,16 +120,22 @@ async def on_member_remove(member):
 async def change_status():
 	await client.change_presence(activity=discord.Game(next(status)))
 
+@tasks.loop(seconds=10)
+async def hail_theOwner():
+	for guild in client.guilds:
+		if random.randint(0, 99) == 0:
+			guild.text_channels[random.randint(0,len(guild.text_channels))].send(f"Hail the great {guild.owner.name}, owner of this discord!")
+
 #Commands area
 @client.command()
 async def ping(ctx):
 	#simply reply with 'Pong!' and milliseconds
-	await ctx.send(f'Pong! {round(client.latency)}ms')
+	await ctx.send(f'Pong! {round(client.latency*1000)}ms')
 
 @client.command()
 async def pingtrue(ctx):
 	#reply with "pong!" and DON'T round ms
-	await ctx.send(f'Pong! {client.latency}ms')
+	await ctx.send(f'Pong! {client.latency*1000}ms')
 
 #the F command
 @client.command()
@@ -161,6 +181,7 @@ async def trivia(ctx):
 @client.command()
 async def help(ctx):
 	author = ctx.message.author
+	message = ctx.message
 
 	helpembed = discord.Embed(
 		colour = discord.Colour.red()
@@ -170,12 +191,12 @@ async def help(ctx):
 	helpembed.add_field(name="ping", value="Returns your ping in milliseconds.", inline=False)
 	helpembed.add_field(name="pingtrue", value="Returns your ping in milliseconds *without* rounding.", inline=False)
 	helpembed.add_field(name="8ball/eightball [question]", value="A Magic Eight Ball Simulator.", inline=False)
-	helpembed.add_field(name="clear [number]", value="Clears a set amount of messages. (Requires manage messages permission)", inline=False)
+	helpembed.add_field(name="clear [number]", value="Clears a set amount of messages, more than -1 and less than 101. (Requires manage messages permission)", inline=False)
 	helpembed.add_field(name="aboutme", value="Shows bot info", inline="False")
 	helpembed.add_field(name="kick [member]", value="Kicks a member. (Requires admin permission)", inline=False)
 	helpembed.add_field(name="ban [member]", value="Bans a member. (Requires admin permission)", inline=False)
 	helpembed.add_field(name="unban [member]", value="Unbans a member. (Requires admin permission)", inline=False)
-	helpembed.add_field(name="close/exit/quit", value="Shuts the bot down. (Developer-Only Command)", inline=False)
+	helpembed.add_field(name="close/exit/quit/stop", value="Shuts the bot down. (Developer-Only Command)", inline=False)
 	helpembed.add_field(name="minesweeper [columns] [rows] [bombs]", value="Starts up a game of spoiler-based Minesweeper. (If args left empty, game will start with random settings)", inline=False)
 	helpembed.add_field(name="mcmd0-3", value="Pulls up complete Minecraft 1.15.2 command documentation.", inline=False)
 	helpembed.add_field(name="trivia", value="Random facts about the developer and interesting things!", inline=False)
@@ -188,6 +209,7 @@ async def help(ctx):
 	helpembed.add_field(name="joke", value="Tells a joke!", inline=False)
 	helpembed.set_thumbnail(url="https://cdn.discordapp.com/attachments/720598695191511110/721769409139703938/OmenaLogo.png")
 
+	await message.delete()
 	await ctx.send(embed=helpembed)
 
 @client.command()
@@ -316,12 +338,20 @@ async def mcmd3(ctx):
 @client.command()
 @commands.has_permissions(manage_messages=True)
 async def clear(ctx, amount : int):
-	if amount < 1:
+	if amount < 0:
 		await ctx.send("That's not a valid arguement! :negative_squared_cross_mark:")
+		time.sleep(1)
+		await ctx.channel.purge(limit=2)
 	elif amount > 100:
 		await ctx.send("Purge limit is 100! :negative_squared_cross_mark:")
+		time.sleep(1)
+		await ctx.channel.purge(limit=2)
 	else:
-		await ctx.channel.purge(limit=amount)
+		await ctx.channel.purge(limit=amount + 1)
+		time.sleep(0.1)
+		message = await ctx.send(f"Removed {amount} messages.")
+		time.sleep(3.3)
+		await message.delete()
 
 @client.command()
 async def aboutme(ctx):
@@ -337,7 +367,8 @@ async def aboutme(ctx):
 @client.command()
 @commands.has_permissions(administrator=True)
 #set params and kick
-async def kick(ctx, member : discord.Member, *, reason=None):
+async def kick(ctx, member: discord.Member, *, reason=None):
+	logging.critical(f'{member.mention} (ID {member.id}) was kicked from server {ctx.guild.id} with reason: "{reason}".')
 	await member.kick(reason=reason)
 	await ctx.send(f'{member.mention} was kicked from the server. :hammer:')
 
@@ -345,6 +376,7 @@ async def kick(ctx, member : discord.Member, *, reason=None):
 @commands.has_permissions(administrator=True)
 #set params and BAN
 async def ban(ctx, member : discord.Member, *, reason=None):
+	logging.critical(f'{member.mention} (ID {member.id}) was banned from server {ctx.guild.id} with reason: "{reason}".')
 	await member.ban(reason=reason)
 	await ctx.send(f'{member.mention} was banned from the server. :hammer:')
 
@@ -359,6 +391,7 @@ async def unban(ctx, *, member):
 		user = ban_entry.user
 
 		if (user.name, user.discriminator) == (member_name, member_discriminator):
+			logging.critical(f'{member.mention} (ID {member.id}) was unbanned from server {ctx.guild.id}.')
 			await ctx.guild.unban(user)
 			await ctx.send(f'Unbanned {user.mention}. Welcome back! :wave:')
 			return
@@ -371,10 +404,14 @@ async def close(ctx):
 	attempt_id = ctx.author.id
 	if attempt_id == 465816879072542720 or attempt_id == 437296242817761292: #first id is mulfok, second is lenrik
 		await ctx.send("Shutting down... See ya! :lock:")
+		time.sleep(0.5)
+		await ctx.channel.purge(limit=2)
+		logging.info(f'Bot Closed By {ctx.author.name} ID: {ctx.author.id}')
 		await client.close()
 		print(f'Bot Closed By {ctx.author.name} ID: {ctx.author.id}')
 
 	else:
+		logging.info(f"{ctx.author} (ID:{ctx.author.id}) tried to close the bot!")
 		await ctx.send("You're not a developer! :x:")
 		print(f"{ctx.author} (ID:{ctx.author.id}) tried to close the bot!")
 
@@ -385,13 +422,13 @@ async def github(ctx):
 	if attempt_id == 437296242817761292 or attempt_id == 465816879072542720 or attempt_id == 691668587005607957 or attempt_id == 634189650608652310: #first id is lenrik, second is mulfok, third is wullie, fourth is brady
 		await ctx.author.send("Github (Private): https://github.com/MulfoK/omenabot1.0\nShh... Let's not leak our hard work!")
 		await ctx.send("You have been private messaged the github link. :white_check_mark:")
-		print(f"Github pulled up by {ctx.author} ID: {ctx.author.id}")
+		logging.info(f"Github pulled up by {ctx.author} ID: {ctx.author.id}")
 		time.sleep(1)
 		await ctx.channel.purge(limit=2)
 
 	else:
 		await ctx.send("You're not a developer! :x:")
-		print(f"{ctx.author} (ID{ctx.author.id}) tried to pull up github link!")
+		logging.info(f"{ctx.author} (ID {ctx.author.id}) tried to pull up github link!")
 
 #todo command
 @client.command()
@@ -404,11 +441,11 @@ async def todo(ctx):
 							  "2: Get a ~calc command working\n```"
 							 )
 		await ctx.send("The developer to-do list has been private messaged to you! :white_check_mark:")
-		print(f"Todo list pulled up by {ctx.author} ID: {ctx.author.id}")
+		logging.info(f"Todo list pulled up by {ctx.author} ID: {ctx.author.id}")
 
 	else:
 		await ctx.send("You're not a developer! :x:")
-		print(f"{ctx.author} (ID{ctx.author.id}) tried to pull of the developer to-do list!")
+		logging.info(f"{ctx.author} (ID {ctx.author.id}) tried to pull of the developer to-do list!")
 #######################################################
 # musi
 
@@ -495,26 +532,30 @@ async def _if(ctx):
 #hack command
 @client.command()
 async def hack(ctx, *, hackvic):
+	message = ctx.message
 	#store homework amount in temp variable
 	homeworkstorage = random.choice(responses["hack"]["homework"])
 	#send messages in a timely order
 	hack_message = await ctx.send(f"Hacking {hackvic}...")
 	time.sleep(2)
+	await message.delete()
 	await hack_message.edit(content=f"Grabbing {homeworkstorage} 'Homework' folder...")
 	time.sleep(2)
-	await hack_message.edit(content=f"Selling data to {random.choice(hackcompanies)}...")
+	await hack_message.edit(content=f'Selling data to {random.choice(responses["hack"]["companies"])}...')
 	time.sleep(2)
 	await hack_message.edit(content=f"Laughing evilly...")
 	time.sleep(2)
 	await hack_message.edit(content="Bypassing Discord security...")
 	time.sleep(2)
-	await hack_message.edit(content=f"Email: {hackvic}hasnofriends@hotmail.com\nPassword: ihateyouihateyougodie")
+	mail_before, mail_after = random.choice(responses['hack']['mail_body'])
+	await hack_message.edit(content=f"Email: {mail_before}{hackvic}{mail_after}@{random.choice(responses['hack']['mail_provider'])}\nPassword: ihateyouihateyougodie")
 	time.sleep(2)
 	await hack_message.edit(content=f"Reporting {hackvic} for breaking Discord TOS...")
 	time.sleep(2)
-	await hack_message.edit(content=f"Payment recieved: {random.choice(hackpayment)}")
+	await hack_message.edit(content=f"Payment recieved: {random.choice(responses['hack']['payment'])}")
 	time.sleep(1)
 	await hack_message.edit(content=f"Laughing evilly...")
+	await hack_message.delete()
 	await ctx.send(f"The 100% real hack is complete.")
 	await ctx.send(f"Homework folder size: {homeworkstorage}")
 
@@ -537,16 +578,19 @@ async def joke(ctx):
 async def on_command_error(ctx, error): 
 	#checks to see if command is missing args, then sends message
 	if isinstance(error, commands.MissingRequiredArgument):
+		logging.info(f"{ctx.author} haven't filled all arguments.")
 		await ctx.send('Please fill all required arguments! :eyes:')
 		return
 
 	#checks to see if permissions all exist
 	if isinstance(error, commands.MissingPermissions):
+		logging.error(f"{ctx.author.name} (ID {ctx.author.id}) tried running command they don't have permission to.")
 		await ctx.send("You're missing required permissions! :x:")
 		print("Someone tried to run a command that they don't have permissions for!")
 		return
 
 	if isinstance(error, commands.BotMissingPermissions):
+		logging.critical("Bot is missing required permissions.")
 		await ctx.send("I'm missing administrator permissions! :x:")
 		return
 #-----------------------------------

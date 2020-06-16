@@ -48,7 +48,8 @@
 		["Did you hear about the guy who invented knock-knock jokes?", "He won the no-bell prize!"]
 	],
 	"hack":{
-		"companies": ["Mojang Studios",
+		"companies": [
+			"Mojang Studios",
 			"Epic Games",
 			"Microsoft",
 			"Roblox Studios",
@@ -57,7 +58,8 @@
 			"Facebook",
 			"theist mother"
 		],
-		"homework": ["1GB",
+		"homework": [
+			"1GB",
 			"10GB",
 			"100GB",
 			"1TB",
@@ -66,12 +68,27 @@
 			"100TB",
 			"1PB"
 		],
-		"payment": ["£1.00",
+		"payment": [
+			"£1.00",
 			"£25.00",
 			"£50.00",
 			"£75.00",
 			"£100.00",
 			"£1000.00"
+		],
+		"mail_provider":[
+			"mail.ru",
+			"bk.ru",
+			"gmail.com",
+			"hotmail.com"
+		],
+		"mail_body":[
+			["",".legitmail"],
+			["",".hasnofriends"],
+			["awesome","dude"],
+			["the","acc"],
+			["","2021"],
+			["totaly","'slegitmail"]
 		]
 	}
 }
