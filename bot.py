@@ -358,8 +358,7 @@ async def aboutme(ctx):
 	await ctx.send("```\nOmena!BOT a4.0.5\n" + \
 				   "Developed by:\n" + \
 				   "MulfoK: Lead Programmer\n" + \
-				   "lenrik1589: Programmer\n" + \
-				   "Brady: Music Programmer(?)\n" + \
+				   "lenrik1589: Debugger\n" + \
 				   "General Purpose Discord Bot\n" + \
 				   "Written in Python 3.8.2\n" + \
 				   "help for commands list (~ is default prefix)```")

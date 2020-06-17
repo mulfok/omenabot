@@ -523,4 +523,9 @@ bot.add_cog(Music(bot))
 async def on_ready():
     print('Logged in as:\n{0.user.name}\n{0.user.id}'.format(bot))
 
-bot.run("NzA4MTU0MTMzNDE2NTA5NTUx.XuLJRw.6zkcCLfA8boqv413TIeYw1nwLnQ")
+home = os.getenv('HOME')
+
+if home == '/home/tent':
+	bot.run(NzIwNTYxNDU2MzY1NDM2OTI5.XuJjMA.j9BFcMoSdHHIp8_KXbPGVOhwc0)
+else:
+	bot.run('NzA4MTU0MTMzNDE2NTA5NTUx.XuLJRw.6zkcCLfA8boqv413TIeYw1nwLnQ')
