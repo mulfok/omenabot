@@ -37,7 +37,7 @@ responses = {}
 with open(f"{rundir}/responselists.json") as file:
 	responses = json.load(file)
 
-api = Api(api_key=config["youtube api token"])
+#api = Api(api_key=config["youtube api token"])
 
 #grabs server prefix from each server
 def get_prefix(client, message):
