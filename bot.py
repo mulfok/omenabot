@@ -439,8 +439,8 @@ async def todo(ctx):
 	if attempt_id == 437296242817761292 or attempt_id == 465816879072542720 or attempt_id == 691668587005607957 or attempt_id == 634189650608652310: #first id is mulfok, second is lenrik, third is wullie, fourth is brady
 		await ctx.author.send("I feel sorry for you developers...\n" + \
 							  "```Our epic todo list:\n" + \
-							  "1: Integrate a music player into Omena\n" + \
-							  "2: Get a ~calc command working\n```"
+							  "1: Move music.py contents into bot.py\n" + \
+							  "2: Get the ~calc command working properly\n```"
 							 )
 		await ctx.send("The developer to-do list has been private messaged to you! :white_check_mark:")
 		logging.info(f"Todo list pulled up by {ctx.author} ID: {ctx.author.id}")
@@ -514,6 +514,7 @@ async def looped():
 	if lq:
 		await play()
 """
+#######################################################
 #######################################################
 #calc command
 @client.command()
@@ -630,12 +631,12 @@ async def on_command_error(ctx, error):
 		return
 	if isinstance(error, commands.CommandNotFound):
 		logging.info(f'{ctx.message.author.name} (ID: ctx.message.author.id) tried to run command "{ctx.message.content[len(get_prefix(None,ctx.message)):]}" which does not exist.')
-		await ctx.send(f'Command "{ctx.message.content[len(get_prefix(None,ctx.message)):]}" does not exist.')
+		await ctx.send(f'Command "{ctx.message.content[len(get_prefix(None,ctx.message)):]}" does not exist! :x:')
 		return
 
 	logging.error(f"Unexpected error occured in command \"{ctx.command.name}\" with parameters {ctx.message.content.split()[1:]}.")
 	logging.error(error.original)
-	await ctx.send("Unexpected error occured!")
+	await ctx.send("Unexpected error occured! :x:")
 #-----------------------------------
 #Cogs Load
 @client.command()
