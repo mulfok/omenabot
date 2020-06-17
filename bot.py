@@ -75,7 +75,8 @@ async def on_guild_join(guild):
 	with open(f'{rundir}/private/prefixes.json', 'r') as f:
 		prefixes = json.load(f)
 
-	prefixes[str(guild.id)] = '~'
+	prefixes[str(guild.id)]['prefix'] = '~'
+	prefixes[str(guild.id)]['name'] = str(ctx.guild.name)
 
 	with open(f'{rundir}/private/prefixes.json', 'w') as f:
 		json.dump(prefixes, f, indent=4)
@@ -101,6 +102,7 @@ async def changeprefix(ctx, prefix):
 	prefixes[str(ctx.guild.id)]['prefix'] = prefix
 	prefixes[str(ctx.guild.id)]['name'] = str(ctx.guild.name)
 	await ctx.send(f'Prefix changed to `{prefix}`! :white_check_mark:')
+	globals()["prefixes"] = prefixes
 
 	with open(f'{rundir}/private/prefixes.json', 'w') as f:
 		json.dump(prefixes, f, indent=4)
@@ -432,7 +434,7 @@ async def todo(ctx):
 		await ctx.send("You're not a developer! :x:")
 		logging.info(f"{ctx.author} (ID: {ctx.author.id}) tried to pull of the developer to-do list!")
 #######################################################
-
+"""
 #join command
 @client.command()
 async def join(ctx):
@@ -475,7 +477,7 @@ async def looped(err):
 	print(err)
 	if lq:
 		await play()
-
+"""
 #######################################################
 #calc command
 @client.command()
@@ -543,7 +545,6 @@ async def hack(ctx, *, hackvic):
 	time.sleep(2)
 	await hack_message.edit(content=f"Laughing evilly...")
 	time.sleep(2)
-	await hack_message.delete()
 	await ctx.send(f"The 100% real hack is complete.")
 	await ctx.send(f"Homework folder size: {homeworkstorage}")
 
