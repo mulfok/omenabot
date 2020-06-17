@@ -7,9 +7,37 @@ import youtube_dl
 import asyncio
 import time
 import logging
+from pyyoutube import Api
 from discord.ext import commands, tasks
 from discord.utils import get
 from itertools import cycle
+
+lq = True
+
+rundir = pathlib.Path(__file__,).parent.absolute()
+home = os.getenv('HOME')
+
+now = time.gmtime()
+start_time = f'{now[0]}_{now[1]}_{now[2]}_{now[3]}_{now[4]}_{now[5]}'
+def close_logger():
+	os.rename(f'{rundir}/logs/latest.log',f'{rundir}/logs/{start_time}.log')
+print(f"\nStarted at {start_time}")
+logging.basicConfig(filename=f'{rundir}/logs/latest.log', level=logging.INFO)
+logging.atexit.register(close_logger)
+
+prefixes = {}
+with open(f'{rundir}/private/prefixes.json') as f:
+	prefixes = json.load(f)
+
+config = {}
+with open(f'{rundir}/private/bot.json') as file:
+	config = json.load(file)
+
+responses = {}
+with open(f"{rundir}/responselists.json") as file:
+	responses = json.load(file)
+
+api = Api(api_key=config["youtube api token"])
 
 #grabs server prefix from each server
 def get_prefix(client, message):
@@ -23,31 +51,10 @@ client = commands.Bot(command_prefix = get_prefix)
 client.remove_command('help')
 status = cycle(['help - Brings up commands', 'aboutme - Shows bot info', 'trivia - Fun facts!', 'changeprefix - Customise server prefix!'])
 
-rundir = pathlib.Path(__file__,).parent.absolute()
-home = os.getenv('HOME')
-
-now = time.gmtime()
-start_time = f'{now[0]}_{now[1]}_{now[2]}_{now[3]}_{now[4]}_{now[5]}'
-print(f"Started at {start_time}")
-logging.basicConfig(filename=f'{rundir}/logs/latest.log', level=logging.INFO)
-
-with open(f'{rundir}/private/prefixes.json', 'r') as f:
-	prefixes = json.load(f)
-
-config = {}
-
-with open(f'{rundir}/private/bot.json') as file:
-	config = json.load(file)
-
-responses = {}
-
-with open(f"{rundir}/responselists.json") as file:
-	responses = json.load(file)
 
 #Various debug console message events
 @client.event
 async def on_connect():
-	logging.atexit.register(close_logger)
 	logging.info('Connected to discord...')
 
 @client.event
@@ -55,14 +62,11 @@ async def on_disconnect():
 	logging.info('Disconnected from discord.')
 	logging.shutdown()
 
-def close_logger():
-	os.rename(f'{rundir}/logs/latest.log',f'{rundir}/logs/{start_time}.log')
-
 @client.event
 async def on_ready():
 	#set status, change activity and print ready and start loop
 	change_status.start()
-	#hail_theOwner.start()
+	hail_theOwner.start()
 	await client.change_presence(status=discord.Status.online, activity=discord.Game('~helpme for commands!'))
 	logging.info('Ready!')
 	logging.info(f'Logged in as {client.user.name}')
@@ -75,8 +79,8 @@ async def on_guild_join(guild):
 	with open(f'{rundir}/private/prefixes.json', 'r') as f:
 		prefixes = json.load(f)
 
-	prefixes[str(guild.id)]['prefix'] = '~'
-	prefixes[str(guild.id)]['name'] = str(ctx.guild.name)
+	prefixes[str(guild.id)] = '~'
+	globals()["prefixes"] = prefixes
 
 	with open(f'{rundir}/private/prefixes.json', 'w') as f:
 		json.dump(prefixes, f, indent=4)
@@ -88,6 +92,7 @@ async def on_guild_remove(guild):
 		prefixes = json.load(f)
 
 	prefixes.pop(str(guild.id))
+	globals()["prefixes"] = prefixes
 
 	with open(f'{rundir}/private/prefixes.json', 'w') as f:
 		json.dump(prefixes, f, indent=4)
@@ -120,11 +125,12 @@ async def on_member_remove(member):
 async def change_status():
 	await client.change_presence(activity=discord.Game(next(status)))
 
-#@tasks.loop(seconds=10)
-#async def hail_theOwner():
-#	for guild in client.guilds:
-#		if random.randint(0, 99) == 0:
-#			await guild.text_channels[random.randint(0,len(guild.text_channels)-1)].send(f"Hail the great {guild.owner.name}, owner of this discord!")
+@tasks.loop(seconds=10)
+async def hail_theOwner():
+	for guild in client.guilds:
+		if not prefixes[f"{guild.id}"]["hail_channel"] == None: 
+			if random.randint(0, 0) == 0:
+				await guild.text_channels[0].send(f"Hail the great {guild.owner.name}, owner of this discord!")
 
 #Commands area
 @client.command()
@@ -140,20 +146,21 @@ async def pingtrue(ctx):
 #the F command
 @client.command()
 async def f(ctx):
+	#send image link
 	fauthor = ctx.message.author
 
 	fembed = discord.Embed(
 		colour = discord.Colour.red()
 	)
 	fembed.set_author(name="Paying respects...")
-	fembed.set_image(url=f"{random.choice(responses['fresponses'])}")
+	fembed.set_image(url=f"{random.choice(responses['f'])}")
 
 	await ctx.send(embed=fembed)
 
 #Random Anime Song Command
 @client.command(aliases=["animesong"])
 async def randomanimesong(ctx):
-	await ctx.send(f"The developers are not weebs I swear :eyes:\n{random.choice(responses['animeresponses'])}")
+	await ctx.send(f"The developers are not weebs I swear :eyes:\n{random.choice(responses['anime'])}")
 
 @client.command(aliases=['8ball', 'eightball'])
 async def _8ball(ctx, *, question):
@@ -196,6 +203,7 @@ async def help(ctx):
 	helpembed.add_field(name="joke", value="Tells a joke!", inline=False)
 	helpembed.set_thumbnail(url="https://cdn.discordapp.com/attachments/720598695191511110/721769409139703938/OmenaLogo.png")
 
+	await message.delete()
 	await ctx.send(embed=helpembed)
 
 @client.command()
@@ -277,6 +285,8 @@ async def mcmd2(ctx):
 	mcmdembed2 = discord.Embed(
 		colour = discord.Colour.red()
 	)
+	# whyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
+
 	mcmdembed2.set_author(name="1.15.2 Full Command Documentation Page 2")
 	mcmdembed2.add_field(name="/seed", value="Displays the world seed.", inline=False)
 	mcmdembed2.add_field(name="/setblock", value="Changes a block to another block. [See official documentation](/schedule clear <function>)", inline=False)
@@ -323,21 +333,25 @@ async def mcmd3(ctx):
 
 @client.command()
 @commands.has_permissions(manage_messages=True)
-async def clear(ctx, amount : int):
+async def clear(ctx, amount: int):
+	message = ctx.message
 	if amount < 0:
-		await ctx.send("That's not a valid arguement! :negative_squared_cross_mark:")
+		error = await ctx.send("That's not a valid arguement! :negative_squared_cross_mark:")
 		time.sleep(1)
-		await ctx.channel.purge(limit=2)
-	elif amount > 100:
-		await ctx.send("Purge limit is 100! :negative_squared_cross_mark:")
-		time.sleep(1)
-		await ctx.channel.purge(limit=2)
-	else:
-		await ctx.channel.purge(limit=amount + 1)
-		time.sleep(0.1)
-		message = await ctx.send(f"Removed {amount} messages.")
-		time.sleep(3.3)
 		await message.delete()
+		await error.delete()
+	elif amount > 100:
+		error = await ctx.send("Purge limit is 100! :negative_squared_cross_mark:")
+		time.sleep(1)
+		await message.delete()
+		await error.delete()
+	else:
+		await message.delete()
+		await ctx.channel.purge(limit=amount)
+		time.sleep(0.1)
+		success = await ctx.send(f"Removed {amount} messages.")
+		time.sleep(3.3)
+		await success.delete()
 
 @client.command()
 async def aboutme(ctx):
@@ -385,14 +399,15 @@ async def unban(ctx, *, member):
 #Developer Commands
 ##################################################################
 #stops bot command
-@client.command(aliases=["quit", "exit", "stop"])
+@client.command(aliases=["quit", "exit"])
 #@commands.has_permissions(administrator=True)
 async def close(ctx):
 	attempt_id = ctx.author.id
 	if attempt_id == 465816879072542720 or attempt_id == 437296242817761292: #first id is mulfok, second is lenrik
-		await ctx.send("Shutting down... See ya! :lock:")
+		message = await ctx.send("Shutting down... See ya! :lock:")
 		time.sleep(0.5)
-		await ctx.channel.purge(limit=2)
+		await ctx.message.delete()
+		await message.delete()
 		logging.info(f'Bot Closed By {ctx.author.name} ID: {ctx.author.id}')
 		await client.close()
 		print(f'Bot Closed By Developer: {ctx.author.name} ID: {ctx.author.id}')
@@ -408,10 +423,11 @@ async def github(ctx):
 	attempt_id = ctx.author.id
 	if attempt_id == 437296242817761292 or attempt_id == 465816879072542720 or attempt_id == 691668587005607957 or attempt_id == 634189650608652310: #first id is lenrik, second is mulfok, third is wullie, fourth is brady
 		await ctx.author.send("Github (Private): https://github.com/MulfoK/omenabot1.0\nShh... Let's not leak our hard work!")
-		await ctx.send("You have been private messaged the github link. :white_check_mark:")
+		message = await ctx.send("You have been private messaged the github link. :white_check_mark:")
 		logging.info(f"Github pulled up by {ctx.author} ID: {ctx.author.id}")
 		time.sleep(1)
-		await ctx.channel.purge(limit=2)
+		await ctx.message.delete()
+		await message.delete()
 
 	else:
 		await ctx.send("You're not a developer! :x:")
@@ -441,12 +457,12 @@ async def join(ctx):
 	voice = ctx.author.voice
 	if not voice == None:
 		if ctx.voice_client == None:
-			await ctx.send(f'Connecting to {voice.channel.name}! :notes:')
+			await ctx.send(f'Connecting to {voice.channel.name}')
 			await voice.channel.connect()
 		else:
-			await ctx.send(f"I'm already connected to {voice.channel.name}! :x:")
+			await ctx.send("I'm alredy connected, dumdum.")
 	else:
-		await ctx.send('You need to be in a voice channel to run this command! :x:')
+		await ctx.send('Make sure to be connectaed to voice chat on this server.')
 
 #disconnect command
 @client.command(aliases=["leave"])
@@ -454,27 +470,48 @@ async def disconnect(ctx):
 	voice = ctx.author.voice
 	if not voice == None:
 		if not ctx.voice_client == None:
-			await ctx.send(f'Disconnecting from {voice.channel.name}! :musical_note:')
+			await ctx.send(f'Disconnecting from {voice.channel.name}')
 			await ctx.voice_client.disconnect()
 		else:
-			await ctx.send("I'm not connected to a voice channel! :x:")
+			await ctx.send("I'm alredy disconnected, dumdum.")
 	else:
-		await ctx.send('You need to be in a voice channel to run this command! :x:')
+		await ctx.send('Make sure to be connectaed to voice chat on this server.')
 
 # play?
 @client.command(aliases=["p"])
-async def play(ctx):
+async def play(ctx, request = None):
 	song = f'{rundir}/private/song.mp3'
 	if not ctx.voice_client == None:
-		source = discord.FFmpegOpusAudio(song)
-		await ctx.send(f'Playing: `{song}`! :notes:')
-		await ctx.voice_client.play(source, after=looped)
+		if request == None:
+			source = discord.FFmpegOpusAudio(song)
+			await ctx.voice_client.play(source, after=asyncio.create_task(looped()))
+			print('playing whacky stuff')
+		else:
+			results = api.search_by_keywords(q="jokes",count=1,search_type="video",video_type=["any"],video_category_id='music')
+			await ctx.send(results.items[0].to_dict())
+			return
+		await ctx.send(f'Playing: "{song}".')
 	else:
-		await ctx.send("I'm not connected to a voice channel! :x:")
+		await ctx.send("Not connected to any voice chat.")
+
+# pause
+@client.command()
+async def pause(ctx):
+	if not ctx.voice_client._player.is_paused():
+		ctx.voice_client._player.pause()
+	else:
+		ctx.voice_client._player.resume()
+
+# stop
+@client.command()
+async def stop(ctx):
+	if not ctx.voice_client._player.is_stopped():
+		ctx.voice_client._player.stop()
+	else:
+		await ctx.send("Nothing is plaiyng or player is stopped already")
 
 # looped play
-async def looped(err):
-	print(err)
+async def looped():
 	if lq:
 		await play()
 """
@@ -530,6 +567,7 @@ async def hack(ctx, *, hackvic):
 	#send messages in a timely order
 	hack_message = await ctx.send(f"Hacking {hackvic}...")
 	time.sleep(2)
+	await message.delete()
 	await hack_message.edit(content=f"Grabbing {homeworkstorage} 'Homework' folder...")
 	time.sleep(2)
 	await hack_message.edit(content=f'Selling data to {random.choice(responses["hack"]["companies"])}...')
@@ -562,6 +600,15 @@ async def joke(ctx):
 	await ctx.send(punchline)
 
 #-----------------------------------
+# emergency command
+async def on_message(message):
+	if not len(message.mentions) == 0:
+		if message.mentions[0].id == client.user.id:
+			print(message.content)
+	else:
+		await client.invoke(message)
+
+####################################
 #error catch area
 @client.event
 async def on_command_error(ctx, error): 
@@ -582,6 +629,14 @@ async def on_command_error(ctx, error):
 		logging.critical("Bot is missing required permissions.")
 		await ctx.send("I'm missing administrator permissions! :x:")
 		return
+	if isinstance(error, commands.CommandNotFound):
+		logging.info(f'{ctx.message.author.name} (ID: ctx.message.author.id) tried to run command "{ctx.message.content[len(get_prefix(None,ctx.message)):]}" which does not exist.')
+		await ctx.send(f'Command "{ctx.message.content[len(get_prefix(None,ctx.message)):]}" does not exist.')
+		return
+
+	logging.error(f"Unexpected error occured in command \"{ctx.command.name}\" with parameters {ctx.message.content.split()[1:]}.")
+	logging.error(error.original)
+	await ctx.send("Unexpected error occured!")
 #-----------------------------------
 #Cogs Load
 @client.command()
