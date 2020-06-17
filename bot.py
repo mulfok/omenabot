@@ -336,22 +336,19 @@ async def mcmd3(ctx):
 async def clear(ctx, amount: int):
 	message = ctx.message
 	if amount < 0:
-		error = await ctx.send("That's not a valid arguement! :negative_squared_cross_mark:")
+		error = await ctx.send("That's not a valid arguement! :x:")
 		time.sleep(1)
 		await message.delete()
 		await error.delete()
 	elif amount > 100:
-		error = await ctx.send("Purge limit is 100! :negative_squared_cross_mark:")
+		error = await ctx.send("Purge limit is 100! :x")
 		time.sleep(1)
 		await message.delete()
 		await error.delete()
 	else:
-		await message.delete()
-		await ctx.channel.purge(limit=amount)
+		await ctx.channel.purge(limit=amount+1)
 		time.sleep(0.1)
-		success = await ctx.send(f"Removed {amount} messages.")
-		time.sleep(3.3)
-		await success.delete()
+		success = await ctx.send(f"Removed {amount} messages! :white_check_mark:")
 
 @client.command()
 async def aboutme(ctx):
@@ -636,7 +633,7 @@ async def on_command_error(ctx, error):
 
 	logging.error(f"Unexpected error occured in command \"{ctx.command.name}\" with parameters {ctx.message.content.split()[1:]}.")
 	logging.error(error.original)
-	await ctx.send("Unexpected error occured! :x:")
+	await ctx.send("An unexpected error occured! :x:")
 #-----------------------------------
 #Cogs Load
 @client.command()
