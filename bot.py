@@ -285,6 +285,8 @@ async def mcmd2(ctx):
 	mcmdembed2 = discord.Embed(
 		colour = discord.Colour.red()
 	)
+	# whyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
+
 	mcmdembed2.set_author(name="1.15.2 Full Command Documentation Page 2")
 	mcmdembed2.add_field(name="/seed", value="Displays the world seed.", inline=False)
 	mcmdembed2.add_field(name="/setblock", value="Changes a block to another block. [See official documentation](/schedule clear <function>)", inline=False)
@@ -598,15 +600,14 @@ async def joke(ctx):
 	time.sleep(2)
 	await ctx.send(punchline)
 
-# #-----------------------------------
-# # emergency command
-# @client.event
-# async def on_message(message):
-# 	if not len(message.mentions) == 0:
-# 		if message.mentions[0].id == client.user.id:
-# 			print(message.content)
-# 	else:
-# 		await client.invoke(message)
+#-----------------------------------
+# emergency command
+async def on_message(message):
+	if not len(message.mentions) == 0:
+		if message.mentions[0].id == client.user.id:
+			print(message.content)
+	else:
+		await client.invoke(message)
 
 ####################################
 #error catch area
