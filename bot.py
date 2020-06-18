@@ -170,7 +170,7 @@ async def _8ball(ctx, *, question):
 @client.command()
 async def trivia(ctx):
 	#output random answer
-	await ctx.send(f'{random.choice(responsestrivia)}')
+	await ctx.send(f'{random.choice(responses["trivia"])}')
 
 @client.command()
 async def help(ctx):
@@ -417,7 +417,7 @@ async def close(ctx):
 @client.command()
 async def github(ctx):
 	attempt_id = ctx.author.id
-	if attempt_id == 437296242817761292 or attempt_id == 465816879072542720 or attempt_id == 691668587005607957 or attempt_id == 634189650608652310: #first id is lenrik, second is mulfok, third is wullie, fourth is brady
+	if attempt_id == 437296242817761292 or attempt_id == 465816879072542720 or attempt_id == 634189650608652310: #first id is lenrik, second is mulfok, third is wullie, fourth is brady
 		await ctx.author.send("Github (Private): https://github.com/MulfoK/omenabot1.0\nShh... Let's not leak our hard work!")
 		message = await ctx.send("You have been private messaged the github link. :white_check_mark:")
 		logging.info(f"Github pulled up by {ctx.author} ID: {ctx.author.id}")
@@ -433,7 +433,7 @@ async def github(ctx):
 @client.command()
 async def todo(ctx):
 	attempt_id = ctx.author.id
-	if attempt_id == 437296242817761292 or attempt_id == 465816879072542720 or attempt_id == 691668587005607957 or attempt_id == 634189650608652310: #first id is mulfok, second is lenrik, third is wullie, fourth is brady
+	if attempt_id == 437296242817761292 or attempt_id == 465816879072542720 or attempt_id == 634189650608652310: #first id is mulfok, second is lenrik, third is wullie, fourth is brady
 		await ctx.author.send("I feel sorry for you developers...\n" + \
 							  "```Our epic todo list:\n" + \
 							  "1: Move music.py contents into bot.py\n" + \

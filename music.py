@@ -526,6 +526,6 @@ async def on_ready():
 home = os.getenv('HOME')
 
 if home == '/home/tent':
-	bot.run(NzIwNTYxNDU2MzY1NDM2OTI5.XuJjMA.j9BFcMoSdHHIp8_KXbPGVOhwc0)
+	bot.run('NzIwNTYxNDU2MzY1NDM2OTI5.XuJjMA.j9BFcMoSdHHIp8_KXbPGVOhwc0')
 else:
 	bot.run('NzA4MTU0MTMzNDE2NTA5NTUx.XuLJRw.6zkcCLfA8boqv413TIeYw1nwLnQ')
