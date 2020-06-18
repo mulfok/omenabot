@@ -178,7 +178,7 @@ async def _8ball(ctx, *, question):
 @client.command()
 async def trivia(ctx):
 	#output random answer
-	await ctx.send(f'{random.choice(responsestrivia)}')
+	await ctx.send(f'{random.choice(responses["trivia"])}')
 
 @client.command()
 async def help(ctx):
@@ -344,26 +344,23 @@ async def mcmd3(ctx):
 async def clear(ctx, amount: int):
 	message = ctx.message
 	if amount < 0:
-		error = await ctx.send("That's not a valid arguement! :negative_squared_cross_mark:")
+		error = await ctx.send("That's not a valid arguement! :x:")
 		time.sleep(1)
 		await message.delete()
 		await error.delete()
 	elif amount > 100:
-		error = await ctx.send("Purge limit is 100! :negative_squared_cross_mark:")
+		error = await ctx.send("Purge limit is 100! :x")
 		time.sleep(1)
 		await message.delete()
 		await error.delete()
 	else:
-		await message.delete()
-		await ctx.channel.purge(limit=amount)
+		await ctx.channel.purge(limit=amount+1)
 		time.sleep(0.1)
-		success = await ctx.send(f"Removed {amount} messages.")
-		time.sleep(3.3)
-		await success.delete()
+		success = await ctx.send(f"Removed {amount} messages! :white_check_mark:")
 
 @client.command()
 async def aboutme(ctx):
-	await ctx.send("```\nOmena!BOT a4.0.5\n" + \
+	await ctx.send("```\nOmena!BOT v1.0.0\n" + \
 				   "Developed by:\n" + \
 				   "MulfoK: Lead Programmer\n" + \
 				   "lenrik1589: Debugger\n" + \
@@ -447,8 +444,8 @@ async def todo(ctx):
 	if attempt_id == 437296242817761292 or attempt_id == 465816879072542720 or attempt_id == 691668587005607957 or attempt_id == 634189650608652310: #first id is mulfok, second is lenrik, third is wullie, fourth is brady
 		await ctx.author.send("I feel sorry for you developers...\n" + \
 							  "```Our epic todo list:\n" + \
-							  "1: Integrate a music player into Omena\n" + \
-							  "2: Get a ~calc command working\n```"
+							  "1: Move music.py contents into bot.py\n" + \
+							  "2: Get the ~calc command working properly\n```"
 							 )
 		await ctx.send("The developer to-do list has been private messaged to you! :white_check_mark:")
 		logging.info(f"Todo list pulled up by {ctx.author} ID: {ctx.author.id}")
@@ -508,7 +505,6 @@ async def hack(ctx, *, hackvic):
 	#send messages in a timely order
 	hack_message = await ctx.send(f"Hacking {hackvic}...")
 	time.sleep(2)
-	await message.delete()
 	await hack_message.edit(content=f"Grabbing {homeworkstorage} 'Homework' folder...")
 	time.sleep(2)
 	await hack_message.edit(content=f'Selling data to {random.choice(responses["hack"]["companies"])}...')
@@ -524,7 +520,6 @@ async def hack(ctx, *, hackvic):
 	time.sleep(2)
 	await hack_message.edit(content=f"Laughing evilly...")
 	time.sleep(2)
-	await hack_message.delete()
 	await ctx.send(f"The 100% real hack is complete.")
 	await ctx.send(f"Homework folder size: {homeworkstorage}")
 
@@ -572,12 +567,12 @@ async def on_command_error(ctx, error):
 		return
 	if isinstance(error, commands.CommandNotFound):
 		logging.info(f'{ctx.message.author.name} (ID: ctx.message.author.id) tried to run command "{ctx.message.content[len(get_prefix(None,ctx.message)):]}" which does not exist.')
-		await ctx.send(f'Command "{ctx.message.content[len(get_prefix(None,ctx.message)):]}" does not exist.')
+		await ctx.send(f'Command "{ctx.message.content[len(get_prefix(None,ctx.message)):]}" does not exist! :x:')
 		return
 
 	logging.error(f"Unexpected error occured in command \"{ctx.command.name}\" with parameters {ctx.message.content.split()[1:]}.")
 	logging.error(error.original)
-	await ctx.send("Unexpected error occured!")
+	await ctx.send("An unexpected error occured! :x:")
 #-----------------------------------
 #Cogs Load
 @client.command()
