@@ -1,3 +1,5 @@
+
+
 import discord 
 import os
 import random
@@ -7,10 +9,11 @@ import youtube_dl
 import asyncio
 import time
 import logging
-from pyyoutube import Api
+# from pyyoutube import Api
 from discord.ext import commands, tasks
 from discord.utils import get
 from itertools import cycle
+# from music import *
 
 lq = True
 
@@ -37,13 +40,12 @@ responses = {}
 with open(f"{rundir}/responselists.json") as file:
 	responses = json.load(file)
 
-api = Api(api_key=config["youtube api token"])
-
 #grabs server prefix from each server
-def get_prefix(client, message):
+def get_prefix(client: discord.ext.commands.bot.Bot, message: discord.Message):
 	if not prefixes[str(message.guild.id)]['prefix']:
 		return '~'
-	return prefixes[str(message.guild.id)]['prefix']
+	else:
+		return prefixes[str(message.guild.id)]['prefix']
 
 #Set bot command prefix!
 client = commands.Bot(command_prefix = get_prefix)
@@ -114,11 +116,13 @@ async def changeprefix(ctx, prefix):
 
 @client.event
 async def on_member_join(member):
-	print(f'{member} has joined a server!')
+	logging.info(f'{member} (ID: {member.id}) has joined {member.guild.name} (ID: {member.guild.id})!')
+	print(f'{member} (ID: {member.id}) has joined {member.guild.name} (ID: {member.guild.id})!')
 
 @client.event
 async def on_member_remove(member):
-	print(f'{member} has left a server. :(')
+	logging.info(f'{member} (ID: {member.id}) has left {member.guild.name} (ID: {member.guild.id})!')
+	print(f'{member} (ID: {member.id}) has left {member.guild.name} (ID: {member.guild.id})!')
 
 #Tasks Area
 @tasks.loop(seconds=5)
@@ -128,15 +132,22 @@ async def change_status():
 @tasks.loop(seconds=10)
 async def hail_theOwner():
 	for guild in client.guilds:
-		if not prefixes[f"{guild.id}"]["hail_channel"] == None: 
-			if random.randint(0, 0) == 0:
-				await guild.text_channels[0].send(f"Hail the great {guild.owner.name}, owner of this discord!")
+		if not prefixes.get(f'{guild.id}').get("hail_channel") == None: 
+			if random.randint(0, 999) == 0:
+				for text_channel in guild.text_channels:
+					if text_channel.id == int(prefixes.get(f'{guild.id}').get("hail_channel")):
+						await text_channel.send(f"Hail the great {guild.owner.name}, owner of this discord!")
 
 #Commands area
 @client.command()
 async def ping(ctx):
 	#simply reply with 'Pong!' and milliseconds
 	await ctx.send(f'Pong! {round(client.latency*1000)}ms')
+
+@client.command(name="commands")
+async def c(ctx):
+	result = "\n"
+	await ctx.send(result.join(client.all_commands.keys()))
 
 @client.command()
 async def pingtrue(ctx):
@@ -162,7 +173,7 @@ async def f(ctx):
 async def randomanimesong(ctx):
 	await ctx.send(f"The developers are not weebs I swear :eyes:\n{random.choice(responses['anime'])}")
 
-@client.command(aliases=['8ball', 'eightball'])
+@client.command(name='8ball',aliases=['eightball'])
 async def _8ball(ctx, *, question):
 	#output random answer
 	await ctx.send(f'Question: {question}\nAnswer: {random.choice(responses["8ball"])}')
@@ -358,8 +369,7 @@ async def aboutme(ctx):
 	await ctx.send("```\nOmena!BOT a4.0.5\n" + \
 				   "Developed by:\n" + \
 				   "MulfoK: Lead Programmer\n" + \
-				   "lenrik1589: Programmer\n" + \
-				   "Brady: Music Programmer(?)\n" + \
+				   "lenrik1589: Debugger\n" + \
 				   "General Purpose Discord Bot\n" + \
 				   "Written in Python 3.8.2\n" + \
 				   "help for commands list (~ is default prefix)```")
@@ -450,72 +460,6 @@ async def todo(ctx):
 		await ctx.send("You're not a developer! :x:")
 		logging.info(f"{ctx.author} (ID: {ctx.author.id}) tried to pull of the developer to-do list!")
 #######################################################
-
-#join command
-@client.command()
-async def join(ctx):
-	voice = ctx.author.voice
-	if not voice == None:
-		if ctx.voice_client == None:
-			await ctx.send(f'Connecting to {voice.channel.name}')
-			await voice.channel.connect()
-		else:
-			await ctx.send("I'm alredy connected, dumdum.")
-	else:
-		await ctx.send('Make sure to be connectaed to voice chat on this server.')
-
-#disconnect command
-@client.command(aliases=["leave"])
-async def disconnect(ctx):
-	voice = ctx.author.voice
-	if not voice == None:
-		if not ctx.voice_client == None:
-			await ctx.send(f'Disconnecting from {voice.channel.name}')
-			await ctx.voice_client.disconnect()
-		else:
-			await ctx.send("I'm alredy disconnected, dumdum.")
-	else:
-		await ctx.send('Make sure to be connectaed to voice chat on this server.')
-
-# play?
-@client.command(aliases=["p"])
-async def play(ctx, request = None):
-	song = f'{rundir}/private/song.mp3'
-	if not ctx.voice_client == None:
-		if request == None:
-			source = discord.FFmpegOpusAudio(song)
-			await ctx.voice_client.play(source, after=asyncio.create_task(looped()))
-			print('playing whacky stuff')
-		else:
-			results = api.search_by_keywords(q="jokes",count=1,search_type="video",video_type=["any"],video_category_id='music')
-			await ctx.send(results.items[0].to_dict())
-			return
-		await ctx.send(f'Playing: "{song}".')
-	else:
-		await ctx.send("Not connected to any voice chat.")
-
-# pause
-@client.command()
-async def pause(ctx):
-	if not ctx.voice_client._player.is_paused():
-		ctx.voice_client._player.pause()
-	else:
-		ctx.voice_client._player.resume()
-
-# stop
-@client.command()
-async def stop(ctx):
-	if not ctx.voice_client._player.is_stopped():
-		ctx.voice_client._player.stop()
-	else:
-		await ctx.send("Nothing is plaiyng or player is stopped already")
-
-# looped play
-async def looped():
-	if lq:
-		await play()
-
-#######################################################
 #calc command
 @client.command()
 async def calc(ctx):
@@ -550,7 +494,7 @@ async def coffee(ctx):
 		await ctx.send("This command isn't for you! :x:")
 
 #ifstatment command
-@client.command(aliases=["if"])
+@client.command(name="if")
 async def _if(ctx):
 	if ctx.author.id == 465816879072542720:
 		await ctx.send("Go learn if statments you madman. :dagger:")
@@ -594,20 +538,19 @@ async def slap(ctx, *, arg):
 #joke command
 @client.command()
 async def joke(ctx):
-	
 	joke, punchline = random.choice(responses["jokes"])
-	await ctx.send(joke)
+	message = await ctx.send(joke)
 	time.sleep(2)
-	await ctx.send(punchline)
+	await message.edit(content=joke+"\n"+punchline)
 
 #-----------------------------------
 # emergency command
-async def on_message(message):
-	if not len(message.mentions) == 0:
-		if message.mentions[0].id == client.user.id:
-			print(message.content)
+@client.event
+async def on_message(message: discord.Message):
+	if message.content[0:22] == "<@!720561456365436929>":
+		await message.channel.send(f'Current prefix is "{get_prefix(None,message)}"')
 	else:
-		await client.invoke(message)
+		await client.process_commands(message)
 
 ####################################
 #error catch area
@@ -642,12 +585,14 @@ async def on_command_error(ctx, error):
 #Cogs Load
 @client.command()
 async def load(ctx, extension):
-	client.load_extension(f'cogs.{extension}');
+	client.load_extension(f'cogs.{extension}')
+	# client.add_cog(Music(client))
+	# client.load_extension(f"music.py")
 
 #Cogs Unload
 @client.command()
 async def unload(ctx, extension):
-	client.unload_extension(f'cogs.{extension}');
+	client.unload_extension(f'cogs.{extension}')
 
 for filename in os.listdir(f'{rundir}/cogs'):
 	if filename.endswith('.py'):
