@@ -1,5 +1,3 @@
-
-
 import discord 
 import os
 import random
@@ -13,7 +11,6 @@ import logging
 from discord.ext import commands, tasks
 from discord.utils import get
 from itertools import cycle
-# from music import *
 
 lq = True
 
@@ -586,8 +583,6 @@ async def on_command_error(ctx, error):
 @client.command()
 async def load(ctx, extension):
 	client.load_extension(f'cogs.{extension}')
-	# client.add_cog(Music(client))
-	# client.load_extension(f"music.py")
 
 #Cogs Unload
 @client.command()
