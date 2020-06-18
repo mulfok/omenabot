@@ -352,7 +352,7 @@ async def clear(ctx, amount: int):
 
 @client.command()
 async def aboutme(ctx):
-	await ctx.send("```\nOmena!BOT a4.0.5\n" + \
+	await ctx.send("```\nOmena!BOT v1.0.0\n" + \
 				   "Developed by:\n" + \
 				   "MulfoK: Lead Programmer\n" + \
 				   "lenrik1589: Debugger\n" + \
