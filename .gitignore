@@ -1,5 +1,5 @@
-prefixes.json
-bot.json
-song.mp3
-chatbridge.json
 logs/*
+private/*
+*/.vscode
+.vscode/*
+tests.py

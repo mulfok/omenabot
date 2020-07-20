@@ -28,10 +28,12 @@ youtube_dl.utils.bug_reports_message = lambda: ''
 
 
 class VoiceError(Exception):
+	print(str(Exception)+" ignore this message (VoiceError)")
 	pass
 
 
 class YTDLError(Exception):
+	print(str(Exception)+" ignore this message (YTDLError)")
 	pass
 
 
@@ -133,13 +135,13 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
 		duration = []
 		if days > 0:
-			duration.append('{} days'.format(days))
+			duration.append(f'{days} days')
 		if hours > 0:
-			duration.append('{} hours'.format(hours))
+			duration.append(f'{hours} hours')
 		if minutes > 0:
-			duration.append('{} minutes'.format(minutes))
+			duration.append(f'{minutes} minutes')
 		if seconds > 0:
-			duration.append('{} seconds'.format(seconds))
+			duration.append(f'{seconds} seconds')
 
 		return ', '.join(duration)
 
@@ -156,6 +158,7 @@ class Song:
 							   description='```css\n{0.source.title}\n```'.format(self),
 							   color=discord.Color.blurple())
 				 .add_field(name='Duration', value=self.source.duration)
+				 .add_field(name='Now', value=self.source.duration)
 				 .add_field(name='Requested by', value=self.requester.mention)
 				 .add_field(name='Uploader', value='[{0.source.uploader}]({0.source.uploader_url})'.format(self))
 				 .add_field(name='URL', value='[Click]({0.source.url})'.format(self))
@@ -197,7 +200,7 @@ class VoiceState:
 		self.next = asyncio.Event()
 		self.songs = SongQueue()
 
-		self._loop = False
+		self._loop = 0
 		self._volume = 0.5
 		self.skip_votes = set()
 
@@ -230,19 +233,33 @@ class VoiceState:
 		while True:
 			self.next.clear()
 
-			if not self.loop:
+			if self.loop == 0:
 				# Try to get the next song within 3 minutes.
 				# If no song will be added to the queue in time,
 				# the player will disconnect due to performance
 				# reasons.
 				try:
-					async with timeout(180):  # 3 minutes
+					async with timeout(600):  # 10 minutes
 						self.current = await self.songs.get()
 				except asyncio.TimeoutError:
 					self.bot.loop.create_task(self.stop())
 					return
+			elif self.loop == 1:
+				if not self.current:
+					try:
+						async with timeout(600):  # 10 minutes
+							self.current = await self.songs.get()
+					except asyncio.TimeoutError:
+						self.bot.loop.create_task(self.stop())
+						return
+				else:
+					await self.songs.put(Song(self.current))
+					self.current = await self.songs.get()
+			else:
+				pass
 
 			self.current.source.volume = self._volume
+			self.current.source.create_source()
 			self.voice.play(self.current.source, after=self.play_next_song)
 			await self.current.source.channel.send(embed=self.current.create_embed())
 
@@ -270,8 +287,10 @@ class VoiceState:
 
 class Music(commands.Cog):
 	def __init__(self, bot: commands.Bot):
+		self.logger = logging.getLogger("bot.music")
 		self.bot = bot
 		self.voice_states = {}
+		self.logger.info("Music module started")
 
 	def get_voice_state(self, ctx: commands.Context):
 		state = self.voice_states.get(ctx.guild.id)
@@ -301,7 +320,7 @@ class Music(commands.Cog):
 	async def _join(self, ctx: commands.Context):
 		"""Joins a voice channel."""
 
-		destination = ctx.author.voice.channel
+		destination  = ctx.author.voice.channel
 		if ctx.voice_state.voice:
 			await ctx.voice_state.voice.move_to(destination)
 			return
@@ -393,6 +412,7 @@ class Music(commands.Cog):
 		"""
 
 		if not ctx.voice_state.is_playing:
+			await ctx.message.add_reaction('❎')
 			return await ctx.send('Not playing any music right now...')
 
 		voter = ctx.message.author
@@ -413,7 +433,7 @@ class Music(commands.Cog):
 		else:
 			await ctx.send('You have already voted to skip this song.')
 
-	@commands.command(name='queue')
+	@commands.command(name='queue',aliases=["q"])
 	async def _queue(self, ctx: commands.Context, *, page: int = 1):
 		"""Shows the player's queue.
 
@@ -421,7 +441,8 @@ class Music(commands.Cog):
 		"""
 
 		if len(ctx.voice_state.songs) == 0:
-			return await ctx.send('Empty queue.')
+			return await ctx.message.add_reaction('❎')
+			await ctx.send('Empty queue.')
 
 		items_per_page = 10
 		pages = math.ceil(len(ctx.voice_state.songs) / items_per_page)
@@ -442,12 +463,13 @@ class Music(commands.Cog):
 		"""Shuffles the queue."""
 
 		if len(ctx.voice_state.songs) == 0:
+			await ctx.message.add_reaction('❎')
 			return await ctx.send('Empty queue.')
 
 		ctx.voice_state.songs.shuffle()
 		await ctx.message.add_reaction('✅')
 
-	@commands.command(name='remove')
+	@commands.command(name= 'remove', aliases= ["r"])
 	async def _remove(self, ctx: commands.Context, index: int):
 		"""Removes a song from the queue at a given index."""
 
@@ -457,8 +479,8 @@ class Music(commands.Cog):
 		ctx.voice_state.songs.remove(index - 1)
 		await ctx.message.add_reaction('✅')
 
-	@commands.command(name='loop')
-	async def _loop(self, ctx: commands.Context):
+	@commands.command(name='loop',aliases=["l"])
+	async def _loop(self, ctx: commands.Context, mode: str= "next"):
 		"""Loops the currently playing song.
 
 		Invoke this command again to unloop the song.
@@ -467,11 +489,11 @@ class Music(commands.Cog):
 		if not ctx.voice_state.is_playing:
 			return await ctx.send('Nothing being played at the moment.')
 
-		# Inverse boolean value to loop and unloop.
-		ctx.voice_state.loop = not ctx.voice_state.loop
+		# Switch to the next looping mode.
+		ctx.voice_state.loop = (ctx.voice_state.loop + 1)%3
 		await ctx.message.add_reaction('✅')
 
-	@commands.command(name='play')
+	@commands.command(name='play',aliases=["p"])
 	async def _play(self, ctx: commands.Context, *, search: str):
 		"""Plays a song.
 
