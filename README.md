@@ -2,7 +2,7 @@
 #### A general purpose discord bot.
 
 ##### Commands:
-help: You should know this you fuckwad.  
+help: ...cmon
 ping: Returns your ping in milliseconds.  
 pingtrue: Returns your ping in milliseconds without rounding.  
 8ball/eightball (question): A Magic Eight Ball Simulator.  
