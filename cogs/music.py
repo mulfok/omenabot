@@ -28,12 +28,15 @@ youtube_dl.utils.bug_reports_message = lambda: ''
 
 
 class VoiceError(Exception):
-	print(str(Exception)+" ignore this message (VoiceError)")
-	pass
+	def __init__(self, err: str):
+		self.__message__ = err
+
+	def __str__():
+		return "VoiceError: "
 
 
 class YTDLError(Exception):
-	print(str(Exception)+" ignore this message (YTDLError)")
+	# print(str(Exception)+" ignore this message (YTDLError)")
 	pass
 
 
