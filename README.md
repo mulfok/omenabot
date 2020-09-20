@@ -2,7 +2,7 @@
 #### A general purpose discord bot.
 
 ##### Commands:
-help: Returns a list of all non-hidden commands and can provide some help on other stuff.
+help: Returns a list of all *non-hidden* commands and can provide some help on other stuff.
 ping: Returns your ping in milliseconds.  
 pingtrue: Returns your ping in milliseconds without rounding.  
 8ball/eightball (question): A Magic Eight Ball Simulator.  
