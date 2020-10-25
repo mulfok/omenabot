@@ -10,13 +10,9 @@ You also need FFmpeg in your PATH environment variable or the FFmpeg.exe binary 
 import asyncio
 import functools
 import itertools
+import logging
 import math
 import random
-import os
-import pathlib
-import json
-import time
-import logging
 
 import discord
 import youtube_dl
@@ -31,7 +27,7 @@ class VoiceError(Exception):
 	def __init__(self, err: str):
 		self.__message__ = err
 
-	def __str__():
+	def __str__(self):
 		return "VoiceError: "
 
 
@@ -158,14 +154,14 @@ class Song:
 
 	def create_embed(self):
 		embed = (discord.Embed(title='Now playing',
-							   description='```css\n{0.source.title}\n```'.format(self),
-							   color=discord.Color.blurple())
-				 .add_field(name='Duration', value=self.source.duration)
-				 .add_field(name='Now', value=self.source.duration)
-				 .add_field(name='Requested by', value=self.requester.mention)
-				 .add_field(name='Uploader', value='[{0.source.uploader}]({0.source.uploader_url})'.format(self))
-				 .add_field(name='URL', value='[Click]({0.source.url})'.format(self))
-				 .set_thumbnail(url=self.source.thumbnail))
+													 description='```css\n{0.source.title}\n```'.format(self),
+													 color=discord.Color.blurple())
+						 .add_field(name='Duration', value=self.source.duration)
+						 .add_field(name='Now', value=self.source.duration)
+						 .add_field(name='Requested by', value=self.requester.mention)
+						 .add_field(name='Uploader', value='[{0.source.uploader}]({0.source.uploader_url})'.format(self))
+						 .add_field(name='URL', value='[Click]({0.source.url})'.format(self))
+						 .set_thumbnail(url=self.source.thumbnail))
 
 		return embed
 
@@ -323,7 +319,7 @@ class Music(commands.Cog):
 	async def _join(self, ctx: commands.Context):
 		"""Joins a voice channel."""
 
-		destination  = ctx.author.voice.channel
+		destination = ctx.author.voice.channel
 		if ctx.voice_state.voice:
 			await ctx.voice_state.voice.move_to(destination)
 			return
@@ -436,7 +432,7 @@ class Music(commands.Cog):
 		else:
 			await ctx.send('You have already voted to skip this song.')
 
-	@commands.command(name='queue',aliases=["q"])
+	@commands.command(name='queue', aliases=["q"])
 	async def _queue(self, ctx: commands.Context, *, page: int = 1):
 		"""Shows the player's queue.
 
@@ -445,7 +441,7 @@ class Music(commands.Cog):
 
 		if len(ctx.voice_state.songs) == 0:
 			return await ctx.message.add_reaction('❎')
-			await ctx.send('Empty queue.')
+			# await ctx.send('Empty queue.')
 
 		items_per_page = 10
 		pages = math.ceil(len(ctx.voice_state.songs) / items_per_page)
@@ -458,7 +454,7 @@ class Music(commands.Cog):
 			queue += '`{0}.` [**{1.source.title}**]({1.source.url})\n'.format(i + 1, song)
 
 		embed = (discord.Embed(description='**{} tracks:**\n\n{}'.format(len(ctx.voice_state.songs), queue))
-				 .set_footer(text='Viewing page {}/{}'.format(page, pages)))
+						 .set_footer(text='Viewing page {}/{}'.format(page, pages)))
 		await ctx.send(embed=embed)
 
 	@commands.command(name='shuffle')
@@ -472,7 +468,7 @@ class Music(commands.Cog):
 		ctx.voice_state.songs.shuffle()
 		await ctx.message.add_reaction('✅')
 
-	@commands.command(name= 'remove', aliases= ["r"])
+	@commands.command(name='remove', aliases=["r"])
 	async def _remove(self, ctx: commands.Context, index: int):
 		"""Removes a song from the queue at a given index."""
 
@@ -482,8 +478,8 @@ class Music(commands.Cog):
 		ctx.voice_state.songs.remove(index - 1)
 		await ctx.message.add_reaction('✅')
 
-	@commands.command(name='loop',aliases=["l"])
-	async def _loop(self, ctx: commands.Context, mode: str= "next"):
+	@commands.command(name='loop', aliases=["l"])
+	async def _loop(self, ctx: commands.Context, mode: str = "next"):
 		"""Loops the currently playing song.
 
 		Invoke this command again to unloop the song.
@@ -493,10 +489,10 @@ class Music(commands.Cog):
 			return await ctx.send('Nothing being played at the moment.')
 
 		# Switch to the next looping mode.
-		ctx.voice_state.loop = (ctx.voice_state.loop + 1)%3
+		ctx.voice_state.loop = (ctx.voice_state.loop + 1) % 3
 		await ctx.message.add_reaction('✅')
 
-	@commands.command(name='play',aliases=["p"])
+	@commands.command(name='play', aliases=["p"])
 	async def _play(self, ctx: commands.Context, *, search: str):
 		"""Plays a song.
 
@@ -531,6 +527,6 @@ class Music(commands.Cog):
 			if ctx.voice_client.channel != ctx.author.voice.channel:
 				raise commands.CommandError('Bot is already in a voice channel.')
 
+
 def setup(bot):
-    bot.add_cog(Music(bot))
-		
+	bot.add_cog(Music(bot))

@@ -50,7 +50,8 @@
 		["I don't trust stairs.", "They're always up to something..."],
 		["Why did the scarecrow win an award?", "Because he was outstanding in his field!"],
 		["I made a pencil with two erasers!", "It was pointless."],
-		["What do you call an elephant that doesn't matter?", "~~Your mom~~ Irrelephant!"]
+		["What do you call an elephant that doesn't matter?", "~~Your mom~~ Irrelephant!"],
+		["Activation hates this bot so much…", "He was ***sad*** when bot broke :stuck_out_tongue:!"]
 	],
 	"hack":{
 		"companies": [
@@ -196,5 +197,11 @@
 			"/xp [add|set] <players> <amount> [points|levels]":"Adds or removes player experience.",
 			"/xp query <player> <amount> [points|levels]":"Displays a player's current experience."
 		}
+	],
+	"pong_loss":[
+		"i suppose that would be my loss, lol :D"
+	],
+	"pong_win":[
+		"You snoose you loose!"
 	]
 }
