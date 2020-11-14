@@ -9,37 +9,60 @@ from math import sin, cos, tan, sqrt, asin, acos, atan, ceil, floor, pow, degree
 import discord
 from discord.ext import commands
 
-from main import OmenaBot
+from omenabot import OmenaBot
 
 
-class General_commands(commands.Cog):
+# def remcmd(obj):
+# 	def remove_commmand(self, name=""):
+# 		setattr(self, name, None)
+# 	print(obj)
+# 	obj["remove_command"] = remove_commmand
+# 	print(obj)
+# 	return obj
+
+
+class General(commands.Cog):
+
+	@property
+	def qualified_name(self):
+		return "General commands"
+
 	def __init__(self, bot: OmenaBot):
 		self.logger = logging.getLogger("bot.general")
 		self.bot = bot
 
+	# @remcmd
 	@commands.command()
-	async def dnd(self, ctx: discord.ext.commands.Context, command: str, args):
+	async def dnd(self, ctx: discord.ext.commands.Context, command:str, *args,**kwargs):
 		if not self.bot.servers[f'{ctx.guild.id}'].get("channels") is None:
 			if not self.bot.servers[f'{ctx.guild.id}'].get("channels").get("dnd") is None:
 				if not self.bot.servers[f'{ctx.guild.id}']["channels"]["dnd"] == ctx.channel.id:
 					ctx.message.content = (await self.bot.get_prefix(ctx.message)) + " in_this_channel"
 					raise commands.CommandNotFound()
+		if command == "roll":
+			await self.roll(ctx, *args, **kwargs)
 		if command == "dice":
-			i = int(args)
-			if i < 1:
-				raise commands.BadArgument(' "whole positive nuber', "Unable to throw imaginary dice")
-			j = random.randrange(i) + 1
-			await ctx.send(f'your number is: {j}')
-		elif command == "roll" and args.split()[0] == "stats":
-			embed = discord.Embed()
-			embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
-			embed.add_field(name="first stat", value=OmenaBot.get_stat())
-			embed.add_field(name="second stat", value=OmenaBot.get_stat())
-			embed.add_field(name="third stat", value=OmenaBot.get_stat())
-			embed.add_field(name="fourth stat", value=OmenaBot.get_stat())
-			embed.add_field(name="fifth stat", value=OmenaBot.get_stat())
-			embed.add_field(name="sixth stat", value=OmenaBot.get_stat())
-			await ctx.send(embed=embed)
+			await self.dice(ctx, *args, **kwargs)
+
+	@commands.command(hidden=True)
+	async def roll(self, ctx: discord.ext.commands.Context, sides):
+		i = int(sides)
+		if i < 1:
+			raise commands.BadArgument(' "whole positive nuber', "Unable to throw imaginary dice")
+		j = random.randrange(i) + 1
+		await ctx.send(f'your number is: {j}')
+
+	@commands.command(hidden=True)
+	async def dice(self, ctx: discord.ext.commands.Context):
+		embed = discord.Embed()
+		embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
+		embed.add_field(name="first stat", value=OmenaBot.get_stat())
+		embed.add_field(name="second stat", value=OmenaBot.get_stat())
+		embed.add_field(name="third stat", value=OmenaBot.get_stat())
+		embed.add_field(name="fourth stat", value=OmenaBot.get_stat())
+		embed.add_field(name="fifth stat", value=OmenaBot.get_stat())
+		embed.add_field(name="sixth stat", value=OmenaBot.get_stat())
+		await ctx.send(embed=embed)
 
 	@commands.command(aliases=["setprefix"], help="Sets command prefix.\nOnly admins can use it.",
 										brief="Sets command prefix.", hidden=False)
@@ -58,40 +81,19 @@ class General_commands(commands.Cog):
 		else:
 			commands.MissingPermissions(ctx.author.guild_permissions.administrator)
 
-	@commands.command(name="set", brief="Configuration command.", hidden=False)
+	@commands.command(name="set", brief="Configuration command.", hidden=False, qualified_name="set")
 	async def set_param(self, ctx: discord.ext.commands.Context, param: str, *value: str):
 		"""
 		Command for configuring different bot parameters for current  guild.
 		"""
+		# @property
+		# def qualified_name(self):
+		# 	return "set"
 		try:
 			if param == "permanick":
-				if not ctx.author.guild_permissions.manage_nicknames and not ctx.author.guild_permissions.administrator and \
-								self.bot.config["devs"].get(f"{ctx.author.id}") is None:
-					raise commands.MissingPermissions(discord.permissions.Permissions(permissions=1 << 27))
-				if len(ctx.message.mentions) == 1:
-					member = ctx.message.mentions[0]
-				elif len(value[0]) == len("564489099512381440"):
-					member = ctx.guild.get_member(int(value[0]))
-				else:
-					member = ctx.guild.get_member(int(value[0][2:-1]))
-				await ctx.message.delete()
-				if self.bot.servers[f'{ctx.guild.id}'].get("nicks") is None:
-					self.bot.servers[f'{ctx.guild.id}']["nicks"] = {}
-				if len(value) < 2:
-					if not self.bot.servers[f'{ctx.guild.id}']["nicks"].get(f'{member.id}') is None:
-						self.bot.servers[f'{ctx.guild.id}']["nicks"].pop(f'{member.id}')
-						await ctx.send(f"reset permanent nick for {member}", delete_after=3)
-						await member.edit(nick=None)
-				else:
-					permanentnick = ' '.join(value[1:])
-					if len(permanentnick) > 32:
-						await ctx.send(f"Nickname `{permanentnick}` is too long (32 characters max).", delete_after=7)
-						return
-					self.bot.servers[f'{ctx.guild.id}']["nicks"][f'{member.id}'] = permanentnick
-					await ctx.send(f"permanent nick for {member} is now set to `{permanentnick}`", delete_after=3)
-					await member.edit(reason="no reason, lol", nick=permanentnick)
-				with open(f'{self.bot.rundir}/private/servers.json', 'w') as f:
-					json.dump(self.bot.servers, f, indent=2)
+				cog = self.bot.get_cog("UserManagement")
+				command = cog.setnick
+				await command(ctx, value)
 				return
 			elif param == "channel":
 				if ctx.author.guild_permissions.manage_channels or not self.bot.config["devs"].get(f"{ctx.author.id}") is None:
@@ -189,21 +191,24 @@ class General_commands(commands.Cog):
 
 	# Commands area
 	@commands.command()
-	async def ping(self, ctx: commands.context, *varg):
-		if varg == ():
+	async def ping(self, ctx: commands.context, *arg, **kvarg):
+		if arg == ():
 			# simply reply with 'Pong!' and milliseconds
 			await ctx.send(f'Pong! {round(self.bot.latency * 1000)}ms')
 		else:
 			pings = 1
 			delay = 1
-			if len(varg) > 1:
-				pings = int(varg[1])
+			if len(kvarg) > 0:
+				delay = kvarg.get("delay") if kvarg.__contains__("delay") else 1
+				pings = kvarg.get("pings") if kvarg.__contains__("pings") else 1
+			if len(arg) > 1:
+				pings = int(arg[1])
 				pings = min(pings, 100)
-				if len(varg) > 2:
-					delay = float(varg[2])
+				if len(arg) > 2:
+					delay = float(arg[2])
 					delay = max(delay, 1)
-			varg = varg[0]
-			user_id = int(varg[3:-1])
+			arg = arg[0]
+			user_id = int(arg[3:-1])
 			user = ctx.guild.get_member(user_id)
 			enabled = self.bot.config['ping'][str(user_id)]
 			if enabled is None:
@@ -229,7 +234,7 @@ class General_commands(commands.Cog):
 				await ctx.send(f"Pinging `{user.name}` is not enabled but they can enable it if they want.")
 
 	@commands.command(name="toggle")
-	async def toggle(self, ctx: discord.ext.commands.Context, command: str, *varg: str):
+	async def toggle(self, ctx: discord.ext.commands.Context, command: str, *arg):
 		if command == "ping":
 			if not ctx.message.mentions == []:
 				user = ctx.message.mentions[0]  # int(varg[3:-1]))
@@ -255,7 +260,7 @@ class General_commands(commands.Cog):
 				await asyncio.sleep(3)
 				await response.delete()
 		else:
-			self.bot.output.write(str(type(self.bot.output)) + str(varg))
+			self.bot.output.write(str(type(self.bot.output)) + str(arg))
 
 	@commands.command()
 	async def pingtrue(self, ctx):
@@ -284,7 +289,8 @@ class General_commands(commands.Cog):
 	async def _8ball(self, ctx, *, question):
 		# output random answer
 		await ctx.message.delete()
-		await ctx.send(f'Question: "`{question}``" by {ctx.author.name}\nAnswer: {random.choice(self.bot.responses["8ball"])}')
+		await ctx.send(
+			f'Question: "`{question}``" by {ctx.author.name}\nAnswer: {random.choice(self.bot.responses["8ball"])}')
 
 	@commands.command()
 	async def trivia(self, ctx):
@@ -300,8 +306,10 @@ class General_commands(commands.Cog):
 			colour=discord.Colour.red()
 		)
 		if 0 < page <= len(self.bot.responses['mc_commands']):
-			mcmdembed.set_author(name=f"1.15.2 Full Command Documentation Page {page}/{len(self.bot.responses['mc_commands'])}")
-			mcmdembed.set_footer(text=f"1.15.2 Full Command Documentation Page {page}/{len(self.bot.responses['mc_commands'])}")
+			mcmdembed.set_author(
+				name=f"1.15.2 Full Command Documentation Page {page}/{len(self.bot.responses['mc_commands'])}")
+			mcmdembed.set_footer(
+				text=f"1.15.2 Full Command Documentation Page {page}/{len(self.bot.responses['mc_commands'])}")
 			for command in self.bot.responses['mc_commands'][page - 1]:
 				mcmdembed.add_field(name=command, value=self.bot.responses['mc_commands'][page - 1][command], inline=False)
 		else:
@@ -326,9 +334,7 @@ class General_commands(commands.Cog):
 			else:
 				await ctx.channel.purge(limit=amount + 1)
 				await asyncio.sleep(0.1)
-				success = await ctx.send(f"Removed {amount} messages! :white_check_mark:")
-				await asyncio.sleep(1)
-				await success.delete()
+				await ctx.send(f"Removed {amount} messages! :white_check_mark:", delete_after=1)
 		else:
 			commands.MissingPermissions(perms.manage_messages)
 
@@ -539,4 +545,4 @@ class General_commands(commands.Cog):
 
 
 def setup(bot):
-	bot.add_cog(General_commands(bot))
+	bot.add_cog(General(bot))

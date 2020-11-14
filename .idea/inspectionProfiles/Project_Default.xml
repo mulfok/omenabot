@@ -6,6 +6,8 @@
         <list>
           <option value="E128" />
           <option value="E101" />
+          <option value="E221" />
+          <option value="E501" />
         </list>
       </option>
     </inspection_tool>
@@ -13,6 +15,7 @@
       <option name="ignoredIdentifiers">
         <list>
           <option value="inspect._ParameterKind" />
+          <option value="cogs.music.SongQueue._queue" />
         </list>
       </option>
     </inspection_tool>

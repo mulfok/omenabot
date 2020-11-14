@@ -4,7 +4,7 @@ import time
 import tkinter as tk
 from io import TextIOWrapper, FileIO
 
-from main import OmenaBot
+from omenabot import OmenaBot
 
 
 class SampleApp(tk.Tk):

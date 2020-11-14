@@ -1,4 +1,3 @@
-# import functools
 import json
 import logging
 import os
@@ -9,7 +8,6 @@ import time
 from itertools import cycle
 
 import discord
-import discord_gui as gui
 from colorama import Fore, Style, init as init_terminal_styling
 from discord.ext import commands, tasks
 
@@ -34,9 +32,24 @@ class OmenaBot(commands.bot.Bot):
 		minutes, seconds = divmod(duration, 60)
 		hours, minutes = divmod(minutes, 60)
 		days, hours = divmod(hours, 24)
+		weeks, wdays = divmod(days, 7)
+		months, mdays = divmod(days, 30)
+		years, ydays = divmod(days, 365)
 
 		duration = []
-		if days > 0:
+		if years > 0:
+			duration.append(f'{years} days')
+			if ydays > 0:
+				duration.append(f'{ydays} days')
+		elif months > 0:
+			duration.append(f'{months} days')
+			if mdays > 0:
+				duration.append(f'{mdays} days')
+		elif weeks > 0:
+			duration.append(f'{weeks} days')
+			if wdays > 0:
+				duration.append(f'{wdays} days')
+		elif days > 0:
 			duration.append(f'{days} days')
 		if hours > 0:
 			duration.append(f'{hours} hours')
@@ -129,15 +142,18 @@ class OmenaBot(commands.bot.Bot):
 			self.servers[f'{member.guild.id}']['name'] = member.guild.name
 		if member.guild.id == 663903542842490910:
 			print(f"{Fore.MAGENTA}{member} joined testman")
-		self.logger.info(f'{member} (ID: {member.id}) has joined {member.guild.name} (ID: {member.guild.id})!')
-		print(f'{Fore.GREEN}{member} (ID: {member.id}) has joined {member.guild.name} (ID: {member.guild.id})!')
+		else:
+			self.logger.info(f'{member} (ID: {member.id}) has joined {member.guild.name} (ID: {member.guild.id})!')
+			print(f'{Fore.GREEN}{member} (ID: {member.id}) has joined {member.guild.name} (ID: {member.guild.id})!')
 
 	async def on_member_update(self, member_before: discord.Member, member_after: discord.Member):
 		if not member_before.nick == member_after.nick:
 			if not self.servers.get(f'{member_after.guild.id}') is None:
 				if not self.servers[f'{member_after.guild.id}'].get("nicks") is None:
-					if not self.servers[f'{member_after.guild.id}']["nicks"].get(f'{member_after.id}') is None:
+					if f'{member_after.id}' in self.servers[f'{member_after.guild.id}']["nicks"]:
 						if not self.servers[f'{member_after.guild.id}']["nicks"][f'{member_after.id}'] == member_after.nick:
+							print(f'member changed nick to {member_before.nick} while having '
+										f'permanick {self.servers[f"{member_after.guild.id}"]["nicks"][f"{member_after.id}"]}')
 							await member_after.edit(reason="permanent nickname",
 																			nick=self.servers[f'{member_after.guild.id}']["nicks"][f'{member_after.id}'])
 
@@ -147,8 +163,9 @@ class OmenaBot(commands.bot.Bot):
 		if member.guild.id == 663903542842490910:
 			print(f"{Fore.MAGENTA}{member} left testman")
 			print(member.guild.system_channel())
-		self.logger.info(f'{member} (ID: {member.id}) has left {member.guild.name} (ID: {member.guild.id})!')
-		print(f'{Fore.RED}{member} (ID: {member.id}) has left {member.guild.name} (ID: {member.guild.id})!')
+		else:
+			self.logger.info(f'{member} (ID: {member.id}) has left {member.guild.name} (ID: {member.guild.id})!')
+			print(f'{Fore.RED}{member} (ID: {member.id}) has left {member.guild.name} (ID: {member.guild.id})!')
 
 	# Tasks Area
 	@tasks.loop(seconds=5)
@@ -180,13 +197,20 @@ class OmenaBot(commands.bot.Bot):
 						json.dump(self.servers, server_file, indent=2)
 				channels = self.servers[f'{message.guild.id}'].get('channels')
 				if channels is not None:
-					image_only = channels.get('image_only')
+					image_only = channels.get('image-only')
 					if image_only is not None:
 						if message.channel.permissions_for(message.guild.get_member(self.user.id)).manage_messages:
-							if message.channel.id == image_only:
+							if (message.channel.id in image_only) if isinstance(image_only, list) else (
+											message.channel.id == image_only):
 								if not message.attachments:
-									await message.delete()
-									return
+									ctx = await self.get_context(message)
+									if not ctx.command:
+										commands_cog = self.get_cog("General")
+										if commands_cog:
+											await commands_cog.clear(ctx, 0)
+										else:
+											await message.delete()
+										return
 				if not message.content.startswith(".."):
 					await self.process_commands(message)
 				if message.content[0:22] == f"<@!{self.user.id}>":
@@ -195,11 +219,11 @@ class OmenaBot(commands.bot.Bot):
 						guilds = ""
 						for guild in self.guilds:
 							guilds = "\n".join([guilds, guild.name + f' (ID: {guild.id})'])
-						await message.author.send(f"Currently i'm in {len(self.guilds)}, which are ```\n{guilds}\n```")
+						await message.author.send(f"Currently i'm in {len(self.guilds)}, which are ```fix\n{guilds}\n```")
 					else:
 						await message.delete()
 						self.logger.info(f"Bot was pinged in {message.guild.id}, by {message.author.id}")
-						await message.channel.send(f'Current prefix is "{self.get_prefix(message)}"')
+						await message.channel.send(f'Current prefix is "`{await self.get_prefix(message)}`"')
 
 	####################################
 	# error catch area
@@ -240,6 +264,8 @@ class OmenaBot(commands.bot.Bot):
 			await ctx.send(f'Command "{ctx.invoked_with}" does not exist! :x:')
 			return
 
+		import traceback
+		[print(line) for line in traceback.format_exception(commands.CommandInvokeError, error, None)]
 		self.logger.error(f"Unexpected error occured in command \"{ctx.command.name}\" with parameters {ctx.args[1:]}.")
 		self.logger.error(error.original)
 		await ctx.send("An unexpected error occured! :x:")
@@ -248,6 +274,7 @@ class OmenaBot(commands.bot.Bot):
 	# Cogs Load
 	@commands.command(hidden=True)
 	async def load(self, ctx, extension):
+		print(ctx, extension)
 		self.load_extension(f'cogs.{extension}')
 
 	# Cogs Unload
@@ -257,11 +284,15 @@ class OmenaBot(commands.bot.Bot):
 
 	def __init__(self, **options):
 		super().__init__(self.get_prefix, **options)
+
+		self.start_time_ns: int = 0
+		self.start_time = ""
 		self.output = None
 		init_terminal_styling(autoreset=True)
 		now = time.gmtime()
-		self.start_time = f'{now[0]}_{now[1]}_{now[2]}_{now[3]}_{now[4]}_{now[5]}'
-		print(f"Initialized at {Style.BRIGHT}{Fore.YELLOW}{self.start_time}")
+		self.init_time_ns = time.monotonic_ns()
+		self.init_time = f'{now[0]}_{now[1]}_{now[2]}_{now[3]}_{now[4]}_{now[5]}'
+		print(f"Initialized at {Style.BRIGHT}{Fore.YELLOW}{self.init_time}")
 
 		self.rundir = pathlib.Path(__file__, ).parent.absolute()
 		self.home = os.getenv('HOME')
@@ -271,11 +302,11 @@ class OmenaBot(commands.bot.Bot):
 		except FileNotFoundError:
 			print("{Style.DIM}No latest log.")
 		finally:
-			open(f'{self.rundir}/logs/{self.start_time}.log', 'x')
-		os.symlink(f'{self.rundir}/logs/{self.start_time}.log', f'{self.rundir}/logs/latest.log')
+			open(f'{self.rundir}/logs/{self.init_time}.log', 'x')
+		os.symlink(f'{self.rundir}/logs/{self.init_time}.log', f'{self.rundir}/logs/latest.log')
 		logging.basicConfig(filename=f'{self.rundir}/logs/latest.log', level=logging.INFO)
 		self.logger = logging.getLogger("bot.main")
-		self.logger.info(f'Initialized at {self.start_time}.')
+		self.logger.info(f'Initialized at {self.init_time}.')
 
 		self.lq = True
 		self.stop_pings = False
@@ -298,23 +329,22 @@ class OmenaBot(commands.bot.Bot):
 
 		for filename in os.listdir(f'{self.rundir}/cogs'):
 			if filename.endswith('.py'):
-				self.load_extension(f'cogs.{filename[:-3]}')
+				print(filename)
+				if not filename.startswith("gui") or "-gui" in sys.argv:
+					self.load_extension(f'cogs.{filename[:-3]}')
 
 		self.logger.info(f'Loading complete.')
+		print("Loading complete.")
+
+	def run_bot(self, func, *args, **kwargs):
+		now = time.gmtime()
+		self.start_time_ns = time.monotonic_ns()
+		self.start_time = f'{now[0]}_{now[1]}_{now[2]}_{now[3]}_{now[4]}_{now[5]}'
+		print(f"Started at {Style.BRIGHT}{Fore.YELLOW}{self.start_time}")
+		func(*args, **kwargs)
 
 	async def close_bot(self, name="console", name_id=0):
 		print("close_bot called")
 		await self.close()
 		self.logger.info(f'Bot Closed By {name} ID: {name_id}')
 		print(f'Bot Closed By Developer: {name} ID: {name_id}')
-
-
-if __name__ == '__main__':
-	mode = sys.argv[1] if len(sys.argv) > 1 else "gui"
-	bot = OmenaBot()
-	if mode == "gui":
-		cog = gui.GUI(bot)
-		bot.add_cog(cog)
-		bot.loop.create_task(cog.runme())
-		# asyncio.run(gui.runme(bot.config["token"]))
-	bot.run(bot.config["token"])
