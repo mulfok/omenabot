@@ -16,9 +16,11 @@
 		"The blue M&M was introduced in 1995!",
 		"Lenrik is not a good programmer!",
 		"Bow down to Rib!",
+		"This bot is vritten in ~~Python3~~ Java?",
+		"Guess vhat, Lenrik keyboard's still broken!",
 		"Fingers don't have muscles!"
 	],
-	"8ball":[
+	"_8ball":[
 		"It is certain.",
 		"It is decidedly so.",
 		"Without a doubt.",
@@ -56,6 +58,7 @@
 	"hack":{
 		"companies": [
 			"Mojang Studios",
+			"Rockstar",
 			"Epic Games",
 			"Microsoft",
 			"Roblox Studios",
@@ -88,6 +91,8 @@
 		],
 		"mail_provider":[
 			"mail.ru",
+			"yandex.ru",
+			"rambler.org",
 			"bk.ru",
 			"gmail.com",
 			"hotmail.com"

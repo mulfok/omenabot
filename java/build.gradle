@@ -1,0 +1,25 @@
+plugins {
+    id 'java'
+}
+
+group 'here.lenrik'
+version '0.0.0a'
+
+repositories {
+    mavenCentral()
+    jcenter()
+    maven {
+        url "https://libraries.minecraft.net"
+    }
+}
+
+dependencies {
+    compile 'com.mojang:brigadier:+'
+    compile 'org.apache.logging.log4j:log4j-core:+'
+    compile 'org.apache.logging.log4j:log4j-api:+'
+    compile 'com.google.code.gson:gson:+'
+    compile 'net.dv8tion:JDA:+'
+//    compile 'ch.qos.logback:logback-classic:1.2.3'
+
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}

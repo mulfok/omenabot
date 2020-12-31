@@ -2,6 +2,15 @@ logs/*
 private/*
 */.vscode
 .vscode/*
+.idea/**
 tests.py
 chatbridge.py
 saves/*
+**/__pycache__/**
+/java/.gradle/6.3/**
+/java/.gradle/6.5/**
+/java/build/classes/**
+/java/build/resources/**
+/java/.gradle/checksums/**
+/java/.gradle/vcs-1/gc.properties
+/java/.gradle/buildOutputCleanup/**
