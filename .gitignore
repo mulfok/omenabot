@@ -4,7 +4,7 @@ private/*
 .vscode/*
 .idea/**
 tests.py
-chatbridge.py
+python/chatbridge.py
 saves/*
 **/__pycache__/**
 /java/.gradle/6.3/**
@@ -14,3 +14,4 @@ saves/*
 /java/.gradle/checksums/**
 /java/.gradle/vcs-1/gc.properties
 /java/.gradle/buildOutputCleanup/**
+/python/omenabot.python.iml

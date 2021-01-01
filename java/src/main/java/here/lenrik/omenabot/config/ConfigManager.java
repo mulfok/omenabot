@@ -104,7 +104,7 @@ public class ConfigManager {
 
 	public static class Responses {
 		@SuppressWarnings("unused")
-		public ArrayList<HashMap<String, String>> mc_commands = new ArrayList<>();
+		public HashMap<String, HashMap<String, String>> mc_commands = new HashMap<>();
 		@SuppressWarnings("unused")
 		public HashMap<String, ArrayList> hack = new HashMap<>();
 		@SuppressWarnings("unused")

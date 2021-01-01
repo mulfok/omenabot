@@ -227,10 +227,10 @@ class OmenaBot(commands.bot.Bot):
 
 	####################################
 	# error catch area
-	async def on_command_error(self, ctx, error):
+	async def on_command_error(self, ctx: commands.context, error):
 		# checks to see if command is missing args, then sends message
 		if isinstance(error, commands.MissingRequiredArgument):
-			self.logger.info(f"{ctx.author} haven't filled all arguments.")
+			self.logger.info(f"{ctx.author} haven't filled all arguments. `{ctx.message.content}`")
 			await ctx.send('Please fill all required arguments! :eyes:')
 			return
 
@@ -259,8 +259,8 @@ class OmenaBot(commands.bot.Bot):
 
 		if isinstance(error, commands.CommandNotFound):
 			self.logger.info(
-				f'{ctx.message.author.name} (ID: {ctx.message.author.id}) tried to run command'
-				f' "{ctx.invoked_with}" which does not exist.')
+				f'{ctx.message.author.name} (ID: {ctx.message.author.id}) tried to run command '
+				f'"{ctx.invoked_with}" which does not exist.')
 			await ctx.send(f'Command "{ctx.invoked_with}" does not exist! :x:')
 			return
 
@@ -291,20 +291,20 @@ class OmenaBot(commands.bot.Bot):
 		init_terminal_styling(autoreset=True)
 		now = time.gmtime()
 		self.init_time_ns = time.monotonic_ns()
-		self.init_time = f'{now[0]}_{now[1]}_{now[2]}_{now[3]}_{now[4]}_{now[5]}'
+		self.init_time = f'{now[0]}_{str(now[1]).rjust(2, "0")}_{str(now[2]).rjust(2, "0")}_{str(now[3]).rjust(2, "0")}_{str(now[4]).rjust(2, "0")}_{str(now[5]).rjust(2, "0")}'
 		print(f"Initialized at {Style.BRIGHT}{Fore.YELLOW}{self.init_time}")
 
-		self.rundir = pathlib.Path(__file__, ).parent.absolute()
+		self.rundir = pathlib.Path(__file__, ).parent.parent.absolute()
 		self.home = os.getenv('HOME')
 
 		try:
-			os.remove(f'{self.rundir}/logs/latest.log')
+			stats = os.stat(f"{self.rundir}/logs/latest.log")
+			created = time.gmtime(stats.st_ctime)
+			created_time = f'{created[0]}_{str(created[1]).rjust(2, "0")}_{str(created[2]).rjust(2, "0")}_{str(created[3]).rjust(2, "0")}_{str(created[4]).rjust(2, "0")}_{str(created[5]).rjust(2, "0")}'
+			os.rename(f"{self.rundir}/logs/latest.log", f"{self.rundir}/logs/{created_time}.log")
 		except FileNotFoundError:
-			print("{Style.DIM}No latest log.")
-		finally:
-			open(f'{self.rundir}/logs/{self.init_time}.log', 'x')
-		os.symlink(f'{self.rundir}/logs/{self.init_time}.log', f'{self.rundir}/logs/latest.log')
-		logging.basicConfig(filename=f'{self.rundir}/logs/latest.log', level=logging.INFO)
+			print(f"{Style.DIM}No latest log.")
+		logging.basicConfig(format="[%(asctime)s] [%(threadName)s|%(name)s/%(levelname)-5s] %(message)s", filename=f'{self.rundir}/logs/latest.log', level=logging.INFO)
 		self.logger = logging.getLogger("bot.main")
 		self.logger.info(f'Initialized at {self.init_time}.')
 

@@ -3,10 +3,14 @@ package here.lenrik.omenabot.ui;
 import here.lenrik.omenabot.OmenaBot;
 
 import javax.swing.*;
+import javax.swing.text.BadLocationException;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.beans.PropertyChangeListener;
+import java.net.URL;
+import java.util.ArrayList;
 
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.events.GenericEvent;
 import org.apache.logging.log4j.LogManager;
 
 public class BotUI extends JFrame {
@@ -54,45 +58,19 @@ public class BotUI extends JFrame {
 		//  com.intellij.uiDesigner.FormPreviewFrame
 		// "The silence Vill fall!"
 		// "Can you hear the silence"
-		LookAndFeel lookAndFeel = new LookAndFeel() {
-			@Override
-			public String getName () {
-				return null;
-			}
-
-			@Override
-			public String getID () {
-				return null;
-			}
-
-			@Override
-			public String getDescription () {
-				return null;
-			}
-
-			@Override
-			public boolean isNativeLookAndFeel () {
-				return false;
-			}
-
-			@Override
-			public boolean isSupportedLookAndFeel () {
-				return false;
-			}
-		};
 		setDefaultLookAndFeelDecorated(true);
-		setBackground(backgroundColor);
+//		setBackground(backgroundColor);
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		menuBar = this.rootPane.getJMenuBar();
 		if (menuBar == null) {
 			menuBar = new JMenuBar();
 		}
-		menuBar.setBackground(backgroundColor);
+//		menuBar.setBackground(backgroundColor);
 		setJMenuBar(menuBar);
 		fileMenu = new JMenu("file");
 		menuBar.add(fileMenu);
 
-		consoleTab = new ConsolePanel();
+		consoleTab = new ConsolePanel(this);
 		infoPane = new InfoPanel();
 		tabs = new JTabbedPane();
 		tabs.addTab("Desktop", infoPane);
@@ -123,31 +101,51 @@ public class BotUI extends JFrame {
 	}
 
 	public static final Color backgroundColor = new Color(56, 56, 56);
+	public static final Color foregroundColor = new Color(164, 164, 169);
+
+	public void updateStatus (GenericEvent event) {
+		int memberCount = 0;
+		for(Guild guild : event.getJDA().getGuilds()){
+			memberCount += guild.getMemberCount();
+		}
+		infoPane.setMembers(memberCount + " members.");
+		infoPane.setGuildCount(event.getJDA().getGuilds().size() + " guilds (" + (event.getJDA().getGuilds().size() - event.getJDA().getUnavailableGuilds().size()) + "/" + event.getJDA().getUnavailableGuilds().size() + ")");
+		infoPane.setState("state: '" + event.getJDA().getStatus().name() +"'");
+		StringBuilder builder = new StringBuilder();
+		for(Guild guild : event.getJDA().getGuilds()){
+			builder.append("\n").append(guild);
+		}
+		infoPane.setGuilds(builder.toString());
+	}
+
 	public static class ConsolePanel extends JPanel {
+		BotUI UI;
 		JPanel buttonPanel;
 		JButton kill;
 		JButton send;
 		JTextPane textPane;
 		JTextField input;
 
-		ConsolePanel () {
-			setBackground(backgroundColor);
+		ConsolePanel (BotUI ui) {
+			this.UI = ui;
+//			setBackground(backgroundColor);
 			setLayout(new GridLayout(1 + 1, 1));
 			input = new JFormattedTextField();
-			input.setBackground(backgroundColor);
+//			input.setBackground(backgroundColor);
 			send = new JButton("send");
-			send.setBackground(backgroundColor);
+			send.addActionListener(this::buttonPressed);
+//			send.setBackground(backgroundColor);
 			kill = new JButton("kill");
-			kill.setBackground(backgroundColor);
-			kill.setAction(new KillAction());
+//			kill.setBackground(backgroundColor);
+			kill.addActionListener(this::buttonPressed);
 			buttonPanel = new JPanel();
-			buttonPanel.setBackground(backgroundColor);
+//			buttonPanel.setBackground(backgroundColor);
 			buttonPanel.add(input);
 			buttonPanel.add(send);
 			buttonPanel.add(kill);
 			buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.PAGE_AXIS));
 			textPane = new JTextPane();
-			textPane.setBackground(backgroundColor);
+//			textPane.setBackground(backgroundColor);
 			textPane.setAlignmentY(0);
 			add(textPane);
 			add(buttonPanel);
@@ -155,80 +153,66 @@ public class BotUI extends JFrame {
 			setDefaultLookAndFeelDecorated(true);
 		}
 
-		public static class KillAction implements Action {
-
-			private boolean enabled = true;
-
-			@Override
-			public Object getValue (String s) {
-				return null;
+		public void buttonPressed (ActionEvent event) {
+			switch (event.getActionCommand()){
+				case "kill" -> this.UI.dispose();
+				case "send" -> {
+					try {
+						LogManager.getLogger("button").info(input.getDocument().getText(0, input.getDocument().getLength()));
+					} catch (BadLocationException e) {
+						e.printStackTrace();
+					} finally {
+						input.setText("");
+					}
+				}
 			}
-
-			@Override
-			public void putValue (String s, Object o) {
-
-			}
-
-			@Override
-			public void setEnabled (boolean b) {
-				enabled = b;
-			}
-
-			@Override
-			public boolean isEnabled () {
-				return enabled;
-			}
-
-			@Override
-			public boolean accept (Object sender) {
-				LogManager.getLogger("button").info("button pressed, caller: {} ({})", sender, sender.getClass());
-				return false;
-			}
-
-			@Override
-			public void addPropertyChangeListener (PropertyChangeListener propertyChangeListener) {
-
-			}
-
-			@Override
-			public void removePropertyChangeListener (PropertyChangeListener propertyChangeListener) {
-
-			}
-
-			@Override
-			public void actionPerformed (ActionEvent actionEvent) {
-
-			}
-
 		}
 
 	}
 
 	public static class InfoPanel extends JPanel {
 		JLabel members;
-		JLabel guilds;
+		JLabel guildCount;
 		JLabel state;
+		JPanel guilds;
+		GridBagConstraints gbc;
+		ArrayList<JLabel> guildLabels = new ArrayList<>();
 
 		public InfoPanel () {
-			setBackground(new Color(56, 56, 56));
+//			setBackground(backgroundColor);
 			members = new JLabel("members");
-			guilds = new JLabel("guild");
+			guildCount = new JLabel("guild");
+			guilds = new JPanel();
+			guilds.setLayout(new BoxLayout(guilds, BoxLayout.PAGE_AXIS));
+			gbc = new GridBagConstraints();
 			state = new JLabel("state");
 			this.add(members);
-			this.add(guilds);
+			this.add(guildCount);
 			this.add(state);
+			this.add(guilds);
 		}
 
 		public void setMembers (String text) {
 			members.setText(text);
 		}
 
-		public void setGuilds (String text) {
-			guilds.setText(text);
+		public void setGuildCount (String text) {
+			guildCount.setText(text);
 		}
 
 		public void setState (String text) {
 			state.setText(text);
+		}
+
+		public void setGuilds (String text) {
+			for (JLabel label : guildLabels){
+				guilds.remove(label);
+			}
+			for(String line: text.split("\n")) {
+				JLabel label = new JLabel(line);
+				guilds.add(label, gbc);
+				guildLabels.add(label);
+			}
 		}
 
 	}

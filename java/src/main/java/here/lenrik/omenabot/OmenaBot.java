@@ -6,17 +6,18 @@ import here.lenrik.omenabot.ui.BotUI;
 import javax.security.auth.login.LoginException;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import com.google.gson.internal.LinkedTreeMap;
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.tree.CommandNode;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
-import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageChannel;
-import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.ReadyEvent;
@@ -33,7 +34,7 @@ public class OmenaBot extends ListenerAdapter {
 	public static Logger LOGGER = LogManager.getLogger("OmenaBot");
 	public static CommandDispatcher<BotCommandSource> dispatcher = new CommandDispatcher<>();
 	public ConfigManager config;
-	private BotUI ui;
+	private final BotUI ui;
 
 	JDA discordApi;
 
@@ -51,7 +52,7 @@ public class OmenaBot extends ListenerAdapter {
 		);
 		dispatcher.register(
 						(LiteralArgumentBuilder<BotCommandSource>) (Object) literal("quit").executes(ctx -> {
-							((BotCommandSource) ctx.getSource()).getBot().shutdown();
+							((BotCommandSource) ctx.getSource()).getBot().ui.dispose();
 							return 0;
 						})
 		);
@@ -61,29 +62,12 @@ public class OmenaBot extends ListenerAdapter {
 	@Override
 	public void onGenericEvent (@NotNull GenericEvent event) {
 		super.onGenericEvent(event);
-		int memberCount = 0;
-		for(Guild guild : event.getJDA().getGuilds()){
-			memberCount += guild.getMemberCount();
-		}
-		ui.infoPane.setMembers(memberCount + " members.");
-		ui.infoPane.setGuilds(event.getJDA().getGuilds().size() + " guilds (" + (event.getJDA().getGuilds().size() - event.getJDA().getUnavailableGuilds().size()) + "/" + event.getJDA().getUnavailableGuilds().size() + ")");
-		ui.infoPane.setState("state: '" + event.getJDA().getStatus().name() +"'");
+		ui.updateStatus(event);
 	}
 
 	@Override
 	public void onReady (@NotNull ReadyEvent event) {
-		LOGGER.info("bot is ready and is in {} guilds ({}/{})",
-						event.getGuildAvailableCount(),
-						event.getGuildAvailableCount(),
-						event.getGuildUnavailableCount()
-		);
-		int memberCount = 0;
-		for(Guild guild : event.getJDA().getGuilds()){
-			memberCount += guild.getMemberCount();
-		}
-		ui.infoPane.setMembers(memberCount + " members.");
-		ui.infoPane.setGuilds(event.getGuildTotalCount() + " guilds (" + event.getGuildAvailableCount() + "/" + event.getGuildUnavailableCount() + ")");
-		ui.infoPane.setState("state: '" + event.getJDA().getStatus().name() +"'");
+		ui.updateStatus(event);
 	}
 
 
@@ -93,7 +77,7 @@ public class OmenaBot extends ListenerAdapter {
 		String prefix = ConfigManager.ServerSettings.fromMap((LinkedTreeMap) (Object) config.servers.get(event.getMessage().getGuild().getId())).prefix;
 		if (event.getMessage().getContentRaw().startsWith(prefix) && !event.getMessage().getContentRaw().startsWith(prefix.repeat(2))) {
 			String messageContentsNoPrefix = event.getMessage().getContentRaw().replaceFirst(prefix.translateEscapes(), "");
-			var parse = dispatcher.parse(messageContentsNoPrefix, source);
+			ParseResults<BotCommandSource> parse = dispatcher.parse(messageContentsNoPrefix, source);
 			if (parse.getContext().getCommand() != null) {
 				if (parse.getExceptions().isEmpty()) {
 					try {
@@ -102,7 +86,7 @@ public class OmenaBot extends ListenerAdapter {
 						LOGGER.fatal("There's a bug in com.mojang:brigadier; error:", e);
 					}
 				} else {
-					var e = parse.getExceptions();
+					Map<CommandNode<BotCommandSource>, CommandSyntaxException> e = parse.getExceptions();
 					final boolean a[] = {false};
 					e.forEach((key, eroor) -> a[0] |= eroor.getMessage().startsWith("Unknown command at position "));
 					if (a[0]) {

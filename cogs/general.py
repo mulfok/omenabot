@@ -9,7 +9,7 @@ from math import sin, cos, tan, sqrt, asin, acos, atan, ceil, floor, pow, degree
 import discord
 from discord.ext import commands
 
-from omenabot import OmenaBot
+from python.omenabot import OmenaBot
 
 
 # def remcmd(obj):
@@ -86,9 +86,6 @@ class General(commands.Cog):
 		"""
 		Command for configuring different bot parameters for current  guild.
 		"""
-		# @property
-		# def qualified_name(self):
-		# 	return "set"
 		try:
 			if param == "permanick":
 				cog = self.bot.get_cog("UserManagement")
@@ -354,7 +351,7 @@ class General(commands.Cog):
 	@commands.command(aliases=["quit", "exit"], hidden=True)
 	async def close(self, ctx):
 		if not self.bot.config["devs"].get(f"{ctx.author.id}") is None and \
-						not self.bot.config["devs"][f"{ctx.author.id}"]["priveleges"].index("close") == -1:
+						not self.bot.config["devs"][f"{ctx.author.id}"]["privileges"].index("close") == -1:
 			# first id is mulfok, second is lenrik
 			await ctx.send("Shutting down... See ya! :lock:", delete_after=0.5)
 			await asyncio.sleep(0.6)

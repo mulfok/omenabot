@@ -10,14 +10,13 @@ import org.apache.logging.log4j.Logger;
 
 public class Main {
 	public static Logger LOGGER = LogManager.getLogger("");
-	static OmenaBot bot;
+	public static OmenaBot bot;
+	public static BotUI ui;
 
 	public static void main (String... args) {
 		ConfigManager configManager = new ConfigManager();
 		configManager.load(System.getProperty("user.dir"));
-		LOGGER.info("is ui blocking");
-		BotUI ui = new BotUI();
-		LOGGER.info("ui is not");
+		ui = new BotUI();
 		try {
 			LOGGER.info("Setting up the bot");
 			bot = new OmenaBot(configManager, ui);
