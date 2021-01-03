@@ -1,6 +1,7 @@
 package here.lenrik.omenabot;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import java.util.Map;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.TypeAdapter;
+import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
@@ -19,10 +21,11 @@ import org.jetbrains.annotations.Nullable;
 import static here.lenrik.omenabot.ConfigManager.Adapters.*;
 
 public class ConfigManager {
+	public static Type serversType = new TypeToken<HashMap<String, ServerSettings>>(){}.getType();
 	public static final GsonBuilder gBuilder;
 	public static final Gson gson;
 
-	public Servers servers = new Servers();
+	public HashMap<String, ServerSettings> servers = new HashMap<>();
 	public BotSettings botSettings = new BotSettings();
 	public Responses responses = new Responses();
 	private String saveLocation;
@@ -34,7 +37,7 @@ public class ConfigManager {
 		gBuilder.registerTypeAdapter(BotSettings.Dev.class, new DevAdapter());
 		gBuilder.registerTypeAdapter(BotSettings.class, new BotSettingsAdapter());
 		gBuilder.registerTypeAdapter(ServerSettings.class, new ServerSettingsAdapter());
-		gBuilder.registerTypeAdapter(Servers.class, new ServersAdapter());
+		gBuilder.registerTypeAdapter(serversType, new ServersAdapter());
 		gson = gBuilder.create();
 	}
 
@@ -43,7 +46,7 @@ public class ConfigManager {
 		try {
 			botSettings = BotSettings.load(location + "/private/bot.json");
 			responses = Responses.load(location + "/responselists.json");
-			servers = gson.fromJson(Files.readString(Path.of(location, "/private/servers.json")), Servers.class);
+			servers = gson.fromJson(Files.readString(Path.of(location, "/private/servers.json")), serversType);
 		} catch (IOException e) {
 			e.printStackTrace();
 			saveLocation = null;
@@ -87,14 +90,10 @@ public class ConfigManager {
 
 	}
 
-	public static class Servers extends HashMap<String, ServerSettings> {
-
-	}
-
 	public static class Responses {
 		@SuppressWarnings("unused")
 		public HashMap<String, HashMap<String, String>> mc_commands = new HashMap<>();
-		@SuppressWarnings("unused")
+		@SuppressWarnings({"unused", "rawtypes"})
 		public HashMap<String, ArrayList> hack = new HashMap<>();
 		@SuppressWarnings("unused")
 		public ArrayList<String> pong_loss = new ArrayList<>();
@@ -183,10 +182,10 @@ public class ConfigManager {
 
 	public static final class Adapters{
 
-		public static final class ServersAdapter extends TypeAdapter<Servers> {
+		public static final class ServersAdapter extends TypeAdapter<HashMap<String, ServerSettings>> {
 
 			@Override
-			public void write (JsonWriter out, Servers servers) throws IOException {
+			public void write (JsonWriter out, HashMap<String, ServerSettings> servers) throws IOException {
 				if (servers == null) {
 					out.nullValue();
 					return;
@@ -200,8 +199,8 @@ public class ConfigManager {
 			}
 
 			@Override
-			public Servers read (JsonReader reader) throws IOException {
-				var servers = new Servers();
+			public HashMap<String, ServerSettings> read (JsonReader reader) throws IOException {
+				var servers = new HashMap<String, ServerSettings>();
 				reader.beginObject();
 				while (reader.hasNext()) {
 					reader.peek();
