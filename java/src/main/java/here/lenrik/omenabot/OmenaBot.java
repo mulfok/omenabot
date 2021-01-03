@@ -1,6 +1,5 @@
 package here.lenrik.omenabot;
 
-import here.lenrik.omenabot.config.ConfigManager;
 import here.lenrik.omenabot.ui.BotUI;
 
 import javax.security.auth.login.LoginException;

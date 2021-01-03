@@ -1,4 +1,4 @@
-package here.lenrik.omenabot.config;
+package here.lenrik.omenabot;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -16,7 +16,7 @@ import com.google.gson.stream.JsonWriter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import static here.lenrik.omenabot.config.ConfigManager.Adapters.*;
+import static here.lenrik.omenabot.ConfigManager.Adapters.*;
 
 public class ConfigManager {
 	public static final GsonBuilder gBuilder;
