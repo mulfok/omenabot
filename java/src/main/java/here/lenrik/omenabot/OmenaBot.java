@@ -4,11 +4,8 @@ import here.lenrik.omenabot.config.ConfigManager;
 import here.lenrik.omenabot.ui.BotUI;
 
 import javax.security.auth.login.LoginException;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import com.google.gson.internal.LinkedTreeMap;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
@@ -16,6 +13,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.CommandNode;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.events.Event;
@@ -68,13 +66,19 @@ public class OmenaBot extends ListenerAdapter {
 	@Override
 	public void onReady (@NotNull ReadyEvent event) {
 		ui.updateStatus(event);
+		for(Guild guild: event.getJDA().getGuilds()) {
+			config.servers.get(guild.getId()).name = guild.getName();
+		}
+		LOGGER.info(config.servers);
 	}
 
 
 	@Override
+	@SuppressWarnings({"unchecked", "OptionalGetWithoutIsPresent"})
 	public void onGuildMessageReceived (@NotNull GuildMessageReceivedEvent event) {
 		BotCommandSource source = new BotCommandSource(event, this);
-		String prefix = ConfigManager.ServerSettings.fromMap((LinkedTreeMap) (Object) config.servers.get(event.getMessage().getGuild().getId())).prefix;
+		ConfigManager.ServerSettings settings = config.servers.get(event.getMessage().getGuild().getId());
+		String prefix = settings.prefix;
 		if (event.getMessage().getContentRaw().startsWith(prefix) && !event.getMessage().getContentRaw().startsWith(prefix.repeat(2))) {
 			String messageContentsNoPrefix = event.getMessage().getContentRaw().replaceFirst(prefix.translateEscapes(), "");
 			ParseResults<BotCommandSource> parse = dispatcher.parse(messageContentsNoPrefix, source);
@@ -95,17 +99,20 @@ public class OmenaBot extends ListenerAdapter {
 				}
 			}
 		} else {
-			Object channels = ConfigManager.ServerSettings.fromMap((LinkedTreeMap) (Object) config.servers.get(event.getGuild().getId())).channels.get("image-only");
+			HashMap<String, ConfigManager.ServerSettings.Id_s> channels = settings.channels;
 			if (channels != null) {
-				if (channels.getClass().getName().equals(String.class.getName())) {
-					String channel = (String) channels;
-					if (channel.equals(event.getChannel().getId()) && event.getMessage().getAttachments().size() < 1) {
-						event.getMessage().delete().queue();
-					}
-				} else if (channels.getClass().getName().equals(List.class.getName())) {
-					for (String channel : ((List<String>) channels)) {
-						if (channel.equals(event.getChannel().getId()) && event.getMessage().getAttachments().size() < 1) {
+				ConfigManager.ServerSettings.Id_s imageOnly = channels.get("image-only");
+				if(imageOnly != null) {
+					if (imageOnly.get() instanceof Long) {
+						Long channel = (Long) imageOnly.get();
+						if (channel.equals(event.getChannel().getIdLong()) && event.getMessage().getAttachments().size() < 1) {
 							event.getMessage().delete().queue();
+						}
+					} else if (imageOnly.get() instanceof List) {
+						for (Long channel : (ArrayList<Long>) imageOnly.get()) {
+							if (channel.equals(event.getChannel().getIdLong()) && event.getMessage().getAttachments().size() < 1) {
+								event.getMessage().delete().queue();
+							}
 						}
 					}
 				}

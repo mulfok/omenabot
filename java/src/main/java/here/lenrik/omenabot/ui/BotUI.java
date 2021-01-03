@@ -3,10 +3,14 @@ package here.lenrik.omenabot.ui;
 import here.lenrik.omenabot.OmenaBot;
 
 import javax.swing.*;
+import javax.swing.plaf.synth.SynthLookAndFeel;
 import javax.swing.text.BadLocationException;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.ParseException;
 import java.util.ArrayList;
 
 import net.dv8tion.jda.api.entities.Guild;
@@ -58,14 +62,19 @@ public class BotUI extends JFrame {
 		//  com.intellij.uiDesigner.FormPreviewFrame
 		// "The silence Vill fall!"
 		// "Can you hear the silence"
+		SynthLookAndFeel laf = new SynthLookAndFeel();
+		try {
+			laf.load(new URL("laf.xml"));
+			UIManager.setLookAndFeel(laf);
+		} catch (ParseException | UnsupportedLookAndFeelException | IOException e) {
+			e.printStackTrace();
+		}
 		setDefaultLookAndFeelDecorated(true);
-//		setBackground(backgroundColor);
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		menuBar = this.rootPane.getJMenuBar();
 		if (menuBar == null) {
 			menuBar = new JMenuBar();
 		}
-//		menuBar.setBackground(backgroundColor);
 		setJMenuBar(menuBar);
 		fileMenu = new JMenu("file");
 		menuBar.add(fileMenu);
@@ -73,7 +82,7 @@ public class BotUI extends JFrame {
 		consoleTab = new ConsolePanel(this);
 		infoPane = new InfoPanel();
 		tabs = new JTabbedPane();
-		tabs.addTab("Desktop", infoPane);
+		tabs.addTab("Info", infoPane);
 		tabs.addTab("Console", consoleTab);
 		setContentPane(tabs);
 		setSize(400, 400);
@@ -102,17 +111,18 @@ public class BotUI extends JFrame {
 
 	public static final Color backgroundColor = new Color(56, 56, 56);
 	public static final Color foregroundColor = new Color(164, 164, 169);
+	public static final Color lineColor = new Color(44, 44, 44);
 
 	public void updateStatus (GenericEvent event) {
 		int memberCount = 0;
-		for(Guild guild : event.getJDA().getGuilds()){
+		for (Guild guild : event.getJDA().getGuilds()) {
 			memberCount += guild.getMemberCount();
 		}
 		infoPane.setMembers(memberCount + " members.");
 		infoPane.setGuildCount(event.getJDA().getGuilds().size() + " guilds (" + (event.getJDA().getGuilds().size() - event.getJDA().getUnavailableGuilds().size()) + "/" + event.getJDA().getUnavailableGuilds().size() + ")");
-		infoPane.setState("state: '" + event.getJDA().getStatus().name() +"'");
+		infoPane.setState("state: '" + event.getJDA().getStatus().name() + "'");
 		StringBuilder builder = new StringBuilder();
-		for(Guild guild : event.getJDA().getGuilds()){
+		for (Guild guild : event.getJDA().getGuilds()) {
 			builder.append("\n").append(guild);
 		}
 		infoPane.setGuilds(builder.toString());
@@ -128,24 +138,18 @@ public class BotUI extends JFrame {
 
 		ConsolePanel (BotUI ui) {
 			this.UI = ui;
-//			setBackground(backgroundColor);
 			setLayout(new GridLayout(1 + 1, 1));
 			input = new JFormattedTextField();
-//			input.setBackground(backgroundColor);
 			send = new JButton("send");
 			send.addActionListener(this::buttonPressed);
-//			send.setBackground(backgroundColor);
 			kill = new JButton("kill");
-//			kill.setBackground(backgroundColor);
 			kill.addActionListener(this::buttonPressed);
 			buttonPanel = new JPanel();
-//			buttonPanel.setBackground(backgroundColor);
 			buttonPanel.add(input);
 			buttonPanel.add(send);
 			buttonPanel.add(kill);
 			buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.PAGE_AXIS));
 			textPane = new JTextPane();
-//			textPane.setBackground(backgroundColor);
 			textPane.setAlignmentY(0);
 			add(textPane);
 			add(buttonPanel);
@@ -154,7 +158,7 @@ public class BotUI extends JFrame {
 		}
 
 		public void buttonPressed (ActionEvent event) {
-			switch (event.getActionCommand()){
+			switch (event.getActionCommand()) {
 				case "kill" -> this.UI.dispose();
 				case "send" -> {
 					try {
@@ -179,7 +183,6 @@ public class BotUI extends JFrame {
 		ArrayList<JLabel> guildLabels = new ArrayList<>();
 
 		public InfoPanel () {
-//			setBackground(backgroundColor);
 			members = new JLabel("members");
 			guildCount = new JLabel("guild");
 			guilds = new JPanel();
@@ -205,10 +208,10 @@ public class BotUI extends JFrame {
 		}
 
 		public void setGuilds (String text) {
-			for (JLabel label : guildLabels){
+			for (JLabel label : guildLabels) {
 				guilds.remove(label);
 			}
-			for(String line: text.split("\n")) {
+			for (String line : text.split("\n")) {
 				JLabel label = new JLabel(line);
 				guilds.add(label, gbc);
 				guildLabels.add(label);

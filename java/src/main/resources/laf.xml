@@ -1,0 +1,22 @@
+<synth>
+	<style id="basicStyle">
+		<font name="Verdana" size="16"/>
+		<state>
+			<color value="BLACK" type="BACKGROUND"/>
+			<color value="WHITE" type="FOREGROUND"/>
+		</state>
+	</style>
+	<bind style="basicStyle" type="region" key=".*"/>
+	<style id="buttonStyle">
+		<property key="Button.textShiftOffset" type="integer" value="1"/>
+		<insets top="10" left="10" right="10" bottom="10"/>
+		<state>
+			<imagePainter method="buttonBackground" path="images/button.png" sourceInsets="10 10 10 10"/>
+		</state>
+		<state value="PRESSED">
+			<color value="#9BC3B1" type="BACKGROUND"/>
+			<imagePainter method="buttonBackground" path="images/button2.png" sourceInsets="10 10 10 10"/>
+		</state>
+	</style>
+	<bind style="buttonStyle" type="region" key="Button"/>
+</synth>

@@ -3,40 +3,60 @@ package here.lenrik.omenabot.config;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
-import java.util.function.UnaryOperator;
-import java.util.stream.Stream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
-import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.internal.LinkedTreeMap;
+import com.google.gson.TypeAdapter;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
+import com.google.gson.stream.JsonWriter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import static here.lenrik.omenabot.config.ConfigManager.Adapters.*;
 
 public class ConfigManager {
 	public static final GsonBuilder gBuilder;
 	public static final Gson gson;
 
-	public HashMap<String, ServerSettings> servers = new HashMap<>();
+	public ServersSettings servers = new ServersSettings();
 	public BotSettings botSettings = new BotSettings();
 	public Responses responses = new Responses();
+	private String saveLocation;
+
 
 	static {
 		gBuilder = new GsonBuilder();
-		gson = new Gson();
+		gBuilder.registerTypeAdapter(Responses.Joke.class, new JokeAdapter());
+		gBuilder.registerTypeAdapter(BotSettings.Dev.class, new DevAdapter());
+		gBuilder.registerTypeAdapter(BotSettings.class, new BotSettingsAdapter());
+		gBuilder.registerTypeAdapter(ServerSettings.class, new ServerSettingsAdapter());
+		gBuilder.registerTypeAdapter(ServersSettings.class, new ServersSettingsAdapter());
+		gson = gBuilder.create();
 	}
 
+	@SuppressWarnings({"unchecked"})
 	public void load (String location) {
+		saveLocation = location;
 		try {
 			botSettings = BotSettings.load(location + "/private/bot.json");
 			responses = Responses.load(location + "/responselists.json");
-			servers = gson.fromJson(Files.readString(Path.of(location + "/private/servers.json")), HashMap.class);
+			servers = gson.fromJson(Files.readString(Path.of(location, "/private/servers.json")), ServersSettings.class);
 		} catch (IOException e) {
 			e.printStackTrace();
+			saveLocation = null;
 		}
+	}
+
+	public void save () {
+		save(saveLocation);
+	}
+
+	private void save (String location) {
+
 	}
 
 	public static class BotSettings {
@@ -59,46 +79,16 @@ public class ConfigManager {
 			@SuppressWarnings("unused")
 			public ArrayList<String> privileges;
 
+			@Override
+			public String toString () {
+				return "{" + "name: \"" + name + '"' + ", privileges: " + privileges + "}";
+			}
+
 		}
 
 	}
 
-	public static class ServerSettings extends AbstractMap<String, Object> {
-		@Nullable
-		@SuppressWarnings("unused")
-		public String name;
-		@NotNull
-		public String prefix = "~";
-		@SuppressWarnings("unused")
-		public LinkedTreeMap<String, String> nicks;
-		@SuppressWarnings("unused")
-		public LinkedTreeMap<String, ?> channels;
-
-		public static ServerSettings fromMap (LinkedTreeMap serverSettings) {
-			ServerSettings settings = new ServerSettings();
-			settings.name = (String) serverSettings.get("name");
-			settings.nicks = (LinkedTreeMap<String, String>) serverSettings.get("nicks");
-			settings.prefix = (String) serverSettings.get("prefix");
-			settings.channels = (LinkedTreeMap<String, ?>) serverSettings.get("channels");
-			return settings;
-		}
-
-		@NotNull
-		@Override
-		public Set<Entry<String, Object>> entrySet () {
-			Set<Entry<String, Object>> set = Sets.newIdentityHashSet();
-			set.add(new SimpleEntry<>("prefix", prefix));
-			if (name != null) {
-				set.add(new SimpleEntry<>("name", name));
-			}
-			if (nicks != null) {
-				set.add(new SimpleEntry<>("nicks", nicks));
-			}
-			if (channels != null) {
-				set.add(new SimpleEntry<>("channels", channels));
-			}
-			return set;
-		}
+	public static class ServersSettings extends HashMap<String, ServerSettings> {
 
 	}
 
@@ -125,176 +115,15 @@ public class ConfigManager {
 		public Responses () {
 		}
 
-		public static class Joke implements List<String> {
+		public static class Joke {
 
-			public String joke = "";
-			public String punchline = "";
-
-			@Override
-			public int size () {
-				return joke.isEmpty() || punchline.isEmpty() ? 0 : 2;
+			Joke (String joke_, String punchline_) {
+				joke = joke_;
+				punchline = punchline_;
 			}
 
-			@Override
-			public boolean isEmpty () {
-				return joke.isEmpty() || punchline.isEmpty();
-			}
-
-			@Override
-			public boolean contains (Object o) {
-				return joke.equals(o) || punchline.equals(o);
-			}
-
-			@NotNull
-			@Override
-			public Iterator<String> iterator () {
-				List<String> list = new ArrayList<>(Collections.singletonList(joke));
-				list.add(punchline);
-				return list.iterator();
-			}
-
-			@Override
-			public void forEach (Consumer<? super String> action) {
-				action.accept(joke);
-				action.accept(punchline);
-			}
-
-			@NotNull
-			@Override
-			public Object[] toArray () {
-				return new Object[]{joke, punchline};
-			}
-
-			@Override
-			public boolean add (String o) {
-				if (joke.isEmpty()) {
-					joke = o;
-				} else if (punchline.isEmpty()) {
-					punchline = o;
-				} else {
-					throw new RuntimeException("Cannot add values to a joke");
-				}
-				return true;
-			}
-
-			@Override
-			public boolean remove (Object o) {
-				throw new RuntimeException("Cannot remove values from a joke");
-			}
-
-			@Override
-			public boolean addAll (@NotNull Collection collection) {
-				throw new RuntimeException("Cannot add values to a joke");
-			}
-
-			@Override
-			public boolean removeIf (Predicate filter) {
-				throw new RuntimeException("Cannot remove values from a joke");
-			}
-
-			@Override
-			public boolean addAll (int i, @NotNull Collection collection) {
-				throw new RuntimeException("Cannot add values to a joke");
-			}
-
-			@Override
-			public void replaceAll (UnaryOperator operator) {
-
-			}
-
-			@Override
-			public void sort (Comparator c) {
-
-			}
-
-			@Override
-			public void clear () {
-
-			}
-
-			@Override
-			public String get (int i) {
-				return null;
-			}
-
-			@Override
-			public String set (int i, String o) {
-				return null;
-			}
-
-			@Override
-			public void add (int i, String o) {
-
-			}
-
-			@Override
-			public String remove (int i) {
-				return null;
-			}
-
-			@Override
-			public int indexOf (Object o) {
-				return 0;
-			}
-
-			@Override
-			public int lastIndexOf (Object o) {
-				return 0;
-			}
-
-			@NotNull
-			@Override
-			public ListIterator<String> listIterator () {
-				return (ListIterator<String>) this.iterator();
-			}
-
-			@NotNull
-			@Override
-			public ListIterator<String> listIterator (int i) {
-				return null;
-			}
-
-			@NotNull
-			@Override
-			public List<String> subList (int i, int i1) {
-				return null;
-			}
-
-			@Override
-			public Spliterator<String> spliterator () {
-				return null;
-			}
-
-			@Override
-			public Stream<String> stream () {
-				return null;
-			}
-
-			@Override
-			public Stream<String> parallelStream () {
-				return null;
-			}
-
-			@Override
-			public boolean retainAll (@NotNull Collection collection) {
-				return false;
-			}
-
-			@Override
-			public boolean removeAll (@NotNull Collection collection) {
-				return false;
-			}
-
-			@Override
-			public boolean containsAll (@NotNull Collection collection) {
-				return false;
-			}
-
-			@NotNull
-			@Override
-			public Object[] toArray (@NotNull Object[] objects) {
-				return new Object[0];
-			}
+			public String joke;
+			public String punchline;
 
 		}
 
@@ -305,5 +134,342 @@ public class ConfigManager {
 
 	}
 
+	public static class ServerSettings {
+		@Nullable
+		@SuppressWarnings("unused")
+		public String name;
+		@NotNull
+		public String prefix = "~";
+		@SuppressWarnings("unused")
+		public HashMap<String, String> nicks;
+		@SuppressWarnings("unused")
+		public HashMap<String, Id_s> channels;
+
+		public static class Id_s {
+			@NotNull Long id;
+			@Nullable ArrayList<Long> ids;
+
+			public Id_s (@NotNull Long id, @Nullable ArrayList<Long> ids) {
+				this.id = id;
+				this.ids = ids;
+			}
+
+			public static Id_s valueOf (ArrayList<Long> ids) {
+				return new Id_s(ids.get(0), ids);
+			}
+
+			public Object get () {
+				return ids == null ? id : ids;
+			}
+
+			public static Id_s valueOf (Long value) {
+				return new Id_s(value, null);
+			}
+
+			@Override
+			public String toString () {
+				return ids == null ? id.toString() : ids.toString();
+			}
+
+		}
+
+		@Override
+		public String toString () {
+			return name + "{prefix='" + prefix + "'" + (nicks != null ? ", nicks:" + nicks : "") + (channels != null ? ", channels:" + channels : "") + "}";
+		}
+
+	}
+
+	public static final class Adapters{
+
+		public static final class ServersSettingsAdapter extends TypeAdapter<ServersSettings> {
+
+			@Override
+			public void write (JsonWriter out, ServersSettings servers) throws IOException {
+				if (servers == null) {
+					out.nullValue();
+					return;
+				}
+				out.beginObject();
+				for (Map.Entry<String, ServerSettings> server : servers.entrySet()) {
+					out.name(server.getKey());
+					out.jsonValue(gson.toJson(server.getValue()));
+				}
+				out.endObject();
+			}
+
+			@Override
+			public ServersSettings read (JsonReader reader) throws IOException {
+				var servers = new ServersSettings();
+				reader.beginObject();
+				while (reader.hasNext()) {
+					reader.peek();
+					servers.put(reader.nextName(), gson.getAdapter(ServerSettings.class).read(reader));
+				}
+				reader.endObject();
+				return servers;
+			}
+
+		}
+
+		public static final class ServerSettingsAdapter extends TypeAdapter<ServerSettings> {
+
+			@Override
+			public void write (JsonWriter out, ServerSettings settings) throws IOException {
+				if (settings == null) {
+					out.nullValue();
+					return;
+				}
+				out.beginObject();
+				out.name("name");
+				out.value(settings.name);
+				out.name("prefix");
+				out.value(settings.prefix);
+				if (settings.nicks != null) {
+					out.name("nicks");
+					out.beginObject();
+					for (var nick : settings.nicks.entrySet()) {
+						out.name(nick.getKey());
+						out.value(nick.getValue());
+					}
+					out.endObject();
+				}
+				if (settings.channels != null) {
+					out.name("channels");
+					out.beginObject();
+					for (var channel : settings.channels.entrySet()) {
+						out.name(channel.getKey());
+						ServerSettings.Id_s id_s = channel.getValue();
+						if (id_s.get() instanceof Long) {
+							out.value((Long) id_s.get());
+						} else {
+							out.beginArray();
+							//noinspection unchecked
+							for (Long id : (ArrayList<Long>) id_s.get()) {
+								out.value(id);
+							}
+							out.endArray();
+						}
+					}
+					out.endObject();
+				}
+				out.endObject();
+			}
+
+			@Override
+			public ServerSettings read (JsonReader reader) throws IOException {
+				ServerSettings settings = new ServerSettings();
+				reader.beginObject();
+				String fieldname = null;
+
+				while (reader.hasNext()) {
+					JsonToken token = reader.peek();
+
+					if (token.equals(JsonToken.NAME)) {
+						//get the current token
+						fieldname = reader.nextName();
+					}
+
+					if ("name".equals(fieldname)) {
+						//move to next token
+						token = reader.peek();
+						settings.name = reader.nextString();
+					}
+
+					if ("prefix".equals(fieldname)) {
+						//move to next token
+						token = reader.peek();
+						settings.prefix = reader.nextString();
+					}
+
+					if ("nicks".equals(fieldname)) {
+						settings.nicks = new HashMap<>();
+						reader.beginObject();
+						while (reader.hasNext()) {
+							settings.nicks.put(reader.nextName(), reader.nextString());
+						}
+						reader.endObject();
+					}
+
+					if ("channels".equals(fieldname)) {
+						settings.channels = new HashMap<>();
+						reader.beginObject();
+						while (reader.hasNext()) {
+							String channel = reader.nextName();
+							token = reader.peek();
+							if (token.equals(JsonToken.BEGIN_ARRAY)) {
+								ArrayList<Long> ids = new ArrayList<>();
+								reader.beginArray();
+								while (reader.hasNext()) {
+									ids.add(reader.nextLong());
+								}
+								reader.endArray();
+								settings.channels.put(channel, ServerSettings.Id_s.valueOf(ids));
+							} else {
+								settings.channels.put(channel, ServerSettings.Id_s.valueOf(reader.nextLong()));
+							}
+						}
+						reader.endObject();
+					}
+				}
+				reader.endObject();
+				return settings;
+			}
+
+		}
+
+		public static final class BotSettingsAdapter extends TypeAdapter<BotSettings> {
+
+			@Override
+			public void write (JsonWriter out, BotSettings settings) throws IOException {
+				if (settings == null) {
+					out.nullValue();
+					return;
+				}
+				out.beginObject();
+				out.name("token");
+				out.value(settings.token);
+				if (settings.devs != null) {
+					out.name("devs");
+					out.beginObject();
+					for (var dev : settings.devs.entrySet()) {
+						out.name(dev.getKey());
+						out.jsonValue(gson.toJson(dev.getValue()));
+					}
+					out.endObject();
+				}
+				if (settings.ping != null) {
+					out.name("ping");
+					out.beginObject();
+					for (var entry : settings.ping.entrySet()) {
+						out.name(entry.getKey());
+						out.value(entry.getValue());
+					}
+					out.endObject();
+				}
+				out.endObject();
+
+			}
+
+			@Override
+			public BotSettings read (JsonReader reader) throws IOException {
+				BotSettings settings = new BotSettings();
+				reader.beginObject();
+				String fieldname = null;
+
+				while (reader.hasNext()) {
+					JsonToken token = reader.peek();
+
+					if (token.equals(JsonToken.NAME)) {
+						//get the current token
+						fieldname = reader.nextName();
+					}
+
+					if ("token".equals(fieldname)) {
+						//move to next token
+						token = reader.peek();
+						settings.token = reader.nextString();
+					}
+
+					if ("devs".equals(fieldname)) {
+						settings.devs = new HashMap<>();
+						reader.beginObject();
+						while (reader.hasNext()) {
+							settings.devs.put(reader.nextName(), gson.getAdapter(BotSettings.Dev.class).read(reader));
+						}
+						reader.endObject();
+					}
+
+					if ("ping".equals(fieldname)) {
+						settings.ping = new HashMap<>();
+						reader.beginObject();
+						while (reader.hasNext()) {
+							settings.ping.put(reader.nextName(), reader.nextBoolean());
+						}
+						reader.endObject();
+					}
+				}
+				reader.endObject();
+				return settings;
+			}
+
+		}
+
+		public static final class DevAdapter extends TypeAdapter<BotSettings.Dev> {
+
+			@Override
+			public void write (JsonWriter out, BotSettings.Dev settings) throws IOException {
+				if (settings == null) {
+					out.nullValue();
+					return;
+				}
+				out.beginObject();
+				out.name("name");
+				out.value(settings.name);
+				if (settings.privileges != null) {
+					out.name("privileges");
+					out.beginArray();
+					for (String privilege : settings.privileges) {
+						out.value(privilege);
+					}
+					out.endArray();
+				}
+				out.endObject();
+			}
+
+			@Override
+			public BotSettings.Dev read (JsonReader reader) throws IOException {
+				BotSettings.Dev dev = new BotSettings.Dev();
+				reader.beginObject();
+				String fieldname = null;
+
+				while (reader.hasNext()) {
+					JsonToken token = reader.peek();
+
+					if (token.equals(JsonToken.NAME)) {
+						//get the current token
+						fieldname = reader.nextName();
+					}
+
+					if ("name".equals(fieldname)) {
+						//move to next token
+						token = reader.peek();
+						dev.name = reader.nextString();
+					}
+
+					if ("privileges".equals(fieldname)) {
+						dev.privileges = new ArrayList<>();
+						reader.beginArray();
+						while (reader.hasNext()) {
+							dev.privileges.add(reader.nextString());
+						}
+						reader.endArray();
+					}
+
+				}
+				reader.endObject();
+				return dev;
+			}
+
+		}
+
+		public static final class JokeAdapter extends TypeAdapter<Responses.Joke> {
+
+			@Override
+			public void write (JsonWriter out, Responses.Joke joke) throws IOException {
+				out.jsonValue("[\"" + joke.joke + ", " + joke.punchline + "\"]");
+			}
+
+			@Override
+			public Responses.Joke read (JsonReader reader) throws IOException {
+				reader.beginArray();
+				Responses.Joke joke = new Responses.Joke(reader.nextString(), reader.nextString());
+				reader.endArray();
+				return joke;
+			}
+
+		}
+
+	}
 
 }
