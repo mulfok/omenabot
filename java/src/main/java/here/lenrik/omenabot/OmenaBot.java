@@ -28,9 +28,9 @@ import org.jetbrains.annotations.NotNull;
 import static com.mojang.brigadier.builder.LiteralArgumentBuilder.literal;
 
 public class OmenaBot extends ListenerAdapter {
-	public static Logger LOGGER = LogManager.getLogger("OmenaBot");
-	public static CommandDispatcher<BotCommandSource> dispatcher = new CommandDispatcher<>();
-	public ConfigManager config;
+	public static final Logger LOGGER = LogManager.getLogger("OmenaBot");
+	public static final CommandDispatcher<BotCommandSource> dispatcher = new CommandDispatcher<>();
+	public final ConfigManager config;
 	private final BotUI ui;
 
 	JDA discordApi;
@@ -91,7 +91,7 @@ public class OmenaBot extends ListenerAdapter {
 				} else {
 					Map<CommandNode<BotCommandSource>, CommandSyntaxException> e = parse.getExceptions();
 					final boolean a[] = {false};
-					e.forEach((key, eroor) -> a[0] |= eroor.getMessage().startsWith("Unknown command at position "));
+					e.forEach((key, error) -> a[0] |= error.getMessage().startsWith("Unknown command at position "));
 					if (a[0]) {
 						event.getChannel().sendMessage((e.values()).stream().unordered().findFirst().get().getMessage()).queue();
 					}
@@ -127,7 +127,7 @@ public class OmenaBot extends ListenerAdapter {
 	public static class BotCommandSource {
 		MessageEvent event;
 		private OmenaBot bot;
-		long createdTime = new Date().getTime();
+		final long createdTime = new Date().getTime();
 
 		public BotCommandSource (MessageReceivedEvent event, OmenaBot omenaBot) {
 			this.event = new MessageEvent(event);

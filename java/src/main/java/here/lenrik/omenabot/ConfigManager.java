@@ -22,7 +22,7 @@ public class ConfigManager {
 	public static final GsonBuilder gBuilder;
 	public static final Gson gson;
 
-	public ServersSettings servers = new ServersSettings();
+	public Servers servers = new Servers();
 	public BotSettings botSettings = new BotSettings();
 	public Responses responses = new Responses();
 	private String saveLocation;
@@ -34,17 +34,16 @@ public class ConfigManager {
 		gBuilder.registerTypeAdapter(BotSettings.Dev.class, new DevAdapter());
 		gBuilder.registerTypeAdapter(BotSettings.class, new BotSettingsAdapter());
 		gBuilder.registerTypeAdapter(ServerSettings.class, new ServerSettingsAdapter());
-		gBuilder.registerTypeAdapter(ServersSettings.class, new ServersSettingsAdapter());
+		gBuilder.registerTypeAdapter(Servers.class, new ServersAdapter());
 		gson = gBuilder.create();
 	}
 
-	@SuppressWarnings({"unchecked"})
 	public void load (String location) {
 		saveLocation = location;
 		try {
 			botSettings = BotSettings.load(location + "/private/bot.json");
 			responses = Responses.load(location + "/responselists.json");
-			servers = gson.fromJson(Files.readString(Path.of(location, "/private/servers.json")), ServersSettings.class);
+			servers = gson.fromJson(Files.readString(Path.of(location, "/private/servers.json")), Servers.class);
 		} catch (IOException e) {
 			e.printStackTrace();
 			saveLocation = null;
@@ -88,7 +87,7 @@ public class ConfigManager {
 
 	}
 
-	public static class ServersSettings extends HashMap<String, ServerSettings> {
+	public static class Servers extends HashMap<String, ServerSettings> {
 
 	}
 
@@ -122,8 +121,8 @@ public class ConfigManager {
 				punchline = punchline_;
 			}
 
-			public String joke;
-			public String punchline;
+			public final String joke;
+			public final String punchline;
 
 		}
 
@@ -146,8 +145,10 @@ public class ConfigManager {
 		public HashMap<String, Id_s> channels;
 
 		public static class Id_s {
-			@NotNull Long id;
-			@Nullable ArrayList<Long> ids;
+			@NotNull
+			final Long id;
+			@Nullable
+			final ArrayList<Long> ids;
 
 			public Id_s (@NotNull Long id, @Nullable ArrayList<Long> ids) {
 				this.id = id;
@@ -182,10 +183,10 @@ public class ConfigManager {
 
 	public static final class Adapters{
 
-		public static final class ServersSettingsAdapter extends TypeAdapter<ServersSettings> {
+		public static final class ServersAdapter extends TypeAdapter<Servers> {
 
 			@Override
-			public void write (JsonWriter out, ServersSettings servers) throws IOException {
+			public void write (JsonWriter out, Servers servers) throws IOException {
 				if (servers == null) {
 					out.nullValue();
 					return;
@@ -199,8 +200,8 @@ public class ConfigManager {
 			}
 
 			@Override
-			public ServersSettings read (JsonReader reader) throws IOException {
-				var servers = new ServersSettings();
+			public Servers read (JsonReader reader) throws IOException {
+				var servers = new Servers();
 				reader.beginObject();
 				while (reader.hasNext()) {
 					reader.peek();
@@ -260,29 +261,29 @@ public class ConfigManager {
 			public ServerSettings read (JsonReader reader) throws IOException {
 				ServerSettings settings = new ServerSettings();
 				reader.beginObject();
-				String fieldname = null;
+				String fieldName = null;
 
 				while (reader.hasNext()) {
 					JsonToken token = reader.peek();
 
 					if (token.equals(JsonToken.NAME)) {
 						//get the current token
-						fieldname = reader.nextName();
+						fieldName = reader.nextName();
 					}
 
-					if ("name".equals(fieldname)) {
+					if ("name".equals(fieldName)) {
 						//move to next token
-						token = reader.peek();
+						reader.peek();
 						settings.name = reader.nextString();
 					}
 
-					if ("prefix".equals(fieldname)) {
+					if ("prefix".equals(fieldName)) {
 						//move to next token
-						token = reader.peek();
+						reader.peek();
 						settings.prefix = reader.nextString();
 					}
 
-					if ("nicks".equals(fieldname)) {
+					if ("nicks".equals(fieldName)) {
 						settings.nicks = new HashMap<>();
 						reader.beginObject();
 						while (reader.hasNext()) {
@@ -291,7 +292,7 @@ public class ConfigManager {
 						reader.endObject();
 					}
 
-					if ("channels".equals(fieldname)) {
+					if ("channels".equals(fieldName)) {
 						settings.channels = new HashMap<>();
 						reader.beginObject();
 						while (reader.hasNext()) {
@@ -355,23 +356,23 @@ public class ConfigManager {
 			public BotSettings read (JsonReader reader) throws IOException {
 				BotSettings settings = new BotSettings();
 				reader.beginObject();
-				String fieldname = null;
+				String fieldName = null;
 
 				while (reader.hasNext()) {
 					JsonToken token = reader.peek();
 
 					if (token.equals(JsonToken.NAME)) {
 						//get the current token
-						fieldname = reader.nextName();
+						fieldName = reader.nextName();
 					}
 
-					if ("token".equals(fieldname)) {
+					if ("token".equals(fieldName)) {
 						//move to next token
-						token = reader.peek();
+						reader.peek();
 						settings.token = reader.nextString();
 					}
 
-					if ("devs".equals(fieldname)) {
+					if ("devs".equals(fieldName)) {
 						settings.devs = new HashMap<>();
 						reader.beginObject();
 						while (reader.hasNext()) {
@@ -380,7 +381,7 @@ public class ConfigManager {
 						reader.endObject();
 					}
 
-					if ("ping".equals(fieldname)) {
+					if ("ping".equals(fieldName)) {
 						settings.ping = new HashMap<>();
 						reader.beginObject();
 						while (reader.hasNext()) {
@@ -421,23 +422,23 @@ public class ConfigManager {
 			public BotSettings.Dev read (JsonReader reader) throws IOException {
 				BotSettings.Dev dev = new BotSettings.Dev();
 				reader.beginObject();
-				String fieldname = null;
+				String fieldName = null;
 
 				while (reader.hasNext()) {
 					JsonToken token = reader.peek();
 
 					if (token.equals(JsonToken.NAME)) {
 						//get the current token
-						fieldname = reader.nextName();
+						fieldName = reader.nextName();
 					}
 
-					if ("name".equals(fieldname)) {
+					if ("name".equals(fieldName)) {
 						//move to next token
-						token = reader.peek();
+						reader.peek();
 						dev.name = reader.nextString();
 					}
 
-					if ("privileges".equals(fieldname)) {
+					if ("privileges".equals(fieldName)) {
 						dev.privileges = new ArrayList<>();
 						reader.beginArray();
 						while (reader.hasNext()) {

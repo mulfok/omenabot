@@ -42,7 +42,7 @@
 		"Outlook not so good.",
 		"Very doubtful."
 	],
-	"jokes":[
+	"jokes": [
 		["Why did the chicken cross the road?", "To get to the other side!"],
 		["Why can't cats use a computer?", "Because they're always chasing the mouse!"],
 		["What did the fish say when he swam into the wall?", "Dam."],
@@ -55,7 +55,7 @@
 		["What do you call an elephant that doesn't matter?", "~~Your mom~~ Irrelephant!"],
 		["Activation hates this bot so much…", "He was ***sad*** when bot broke :stuck_out_tongue:!"]
 	],
-	"hack":{
+	"hack": {
 		"companies": [
 			"Mojang Studios",
 			"Rockstar",
@@ -97,13 +97,13 @@
 			"gmail.com",
 			"hotmail.com"
 		],
-		"mail_body":[
-			["",".legitmail"],
-			["",".hasnofriends"],
-			["awesome","dude"],
-			["the","acc"],
-			["","2021"],
-			["totaly","'slegitmail"]
+		"mail_body": [
+			["", ".legitmail"],
+			["", ".hasnofriends"],
+			["awesome", "dude"],
+			["the", "acc"],
+			["", "2021"],
+			["totaly", "'slegitmail"]
 		]
 	},
 	"anime": [

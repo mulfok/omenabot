@@ -8,7 +8,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class Main {
-	public static Logger LOGGER = LogManager.getLogger("");
+	public static final Logger LOGGER = LogManager.getLogger("");
 	public static OmenaBot bot;
 	public static BotUI ui;
 
