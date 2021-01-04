@@ -1,4 +1,5 @@
 logs/*
+python/logs/*
 private/*
 */.vscode
 .vscode/*

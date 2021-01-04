@@ -5,6 +5,7 @@ import here.lenrik.omenabot.OmenaBot;
 import javax.swing.*;
 import javax.swing.plaf.synth.SynthLookAndFeel;
 import javax.swing.text.BadLocationException;
+import javax.swing.tree.DefaultTreeCellRenderer;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.io.IOException;
@@ -17,8 +18,10 @@ import net.dv8tion.jda.api.events.GenericEvent;
 import org.apache.logging.log4j.LogManager;
 
 public class BotUI extends JFrame {
+	DefaultTreeCellRenderer renderer;
+	public final ResponsesPanel responsesTab;
 	public final ConsolePanel consoleTab;
-	public final InfoPanel infoPane;
+	public final InfoPanel infotab;
 	public JMenuBar menuBar;
 	public final JTabbedPane tabs;
 	public final JMenu fileMenu;
@@ -43,10 +46,12 @@ public class BotUI extends JFrame {
 		menuBar.add(fileMenu);
 
 		consoleTab = new ConsolePanel(this);
-		infoPane = new InfoPanel();
+		infotab = new InfoPanel();
+		responsesTab = new ResponsesPanel(this);
 		tabs = new JTabbedPane();
-		tabs.addTab("Info", infoPane);
+		tabs.addTab("Info", infotab);
 		tabs.addTab("Console", consoleTab);
+		tabs.addTab("Responses", responsesTab);
 		setContentPane(tabs);
 		setSize(400, 400);
 		setVisible(true);
@@ -60,9 +65,9 @@ public class BotUI extends JFrame {
 
 	public void setBot (OmenaBot bot) {
 		this.bot = bot;
+		responsesTab.updateConfig();
 	}
 
-	@SuppressWarnings("unused")
 	public OmenaBot getBot () {
 		return bot;
 	}
@@ -76,14 +81,14 @@ public class BotUI extends JFrame {
 		for (Guild guild : event.getJDA().getGuilds()) {
 			memberCount += guild.getMemberCount();
 		}
-		infoPane.setMembers(memberCount + " members.");
-		infoPane.setGuildCount(event.getJDA().getGuilds().size() + " guilds (" + (event.getJDA().getGuilds().size() - event.getJDA().getUnavailableGuilds().size()) + "/" + event.getJDA().getUnavailableGuilds().size() + ")");
-		infoPane.setState("state: '" + event.getJDA().getStatus().name() + "'");
+		infotab.setMembers(memberCount + " members.");
+		infotab.setGuildCount(event.getJDA().getGuilds().size() + " guilds (" + (event.getJDA().getGuilds().size() - event.getJDA().getUnavailableGuilds().size()) + "/" + event.getJDA().getUnavailableGuilds().size() + ")");
+		infotab.setState("state: '" + event.getJDA().getStatus().name() + "'");
 		StringBuilder builder = new StringBuilder();
 		for (Guild guild : event.getJDA().getGuilds()) {
 			builder.append("\n").append(guild);
 		}
-		infoPane.setGuilds(builder.toString());
+		infotab.setGuilds(builder.toString());
 	}
 
 	public static class ConsolePanel extends JPanel {

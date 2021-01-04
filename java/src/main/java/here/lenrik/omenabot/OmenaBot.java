@@ -1,5 +1,8 @@
 package here.lenrik.omenabot;
 
+import here.lenrik.omenabot.command.CommandManager;
+import here.lenrik.omenabot.config.ConfigManager;
+import here.lenrik.omenabot.config.ServerSettings;
 import here.lenrik.omenabot.ui.BotUI;
 
 import javax.security.auth.login.LoginException;
@@ -7,7 +10,6 @@ import java.util.*;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.ParseResults;
-import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.CommandNode;
 import net.dv8tion.jda.api.JDA;
@@ -25,34 +27,20 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-import static com.mojang.brigadier.builder.LiteralArgumentBuilder.literal;
-
 public class OmenaBot extends ListenerAdapter {
 	public static final Logger LOGGER = LogManager.getLogger("OmenaBot");
-	public static final CommandDispatcher<BotCommandSource> dispatcher = new CommandDispatcher<>();
+	public static final CommandDispatcher<Object> dispatcher = new CommandDispatcher<>();
 	public final ConfigManager config;
 	private final BotUI ui;
+	public static OmenaBot INSTANCE;
 
 	JDA discordApi;
 
-	@SuppressWarnings("unchecked")
 	public OmenaBot (ConfigManager config, BotUI ui) throws LoginException {
+		INSTANCE = this;
 		this.config = config;
 		this.ui = ui;
-		dispatcher.register(
-						(LiteralArgumentBuilder<BotCommandSource>) (Object) literal("ping").executes(context -> {
-							long processing = new Date().getTime() - ((BotCommandSource) context.getSource()).createdTime;
-							long ping = ((BotCommandSource) context.getSource()).getJDA().getGatewayPing();
-							((BotCommandSource) context.getSource()).getEvent().getChannel().sendMessage("pong! (processing:" + processing + "ms, ping:" + ping + "ms)").queue();
-							return 0;
-						})
-		);
-		dispatcher.register(
-						(LiteralArgumentBuilder<BotCommandSource>) (Object) literal("quit").executes(ctx -> {
-							((BotCommandSource) ctx.getSource()).getBot().ui.dispose();
-							return 0;
-						})
-		);
+		CommandManager.register(dispatcher);
 		discordApi = JDABuilder.createDefault(config.botSettings.token).addEventListeners(this).build();
 	}
 
@@ -65,10 +53,19 @@ public class OmenaBot extends ListenerAdapter {
 	@Override
 	public void onReady (@NotNull ReadyEvent event) {
 		ui.updateStatus(event);
-		for(Guild guild: event.getJDA().getGuilds()) {
-			config.servers.get(guild.getId()).name = guild.getName();
+		for (Guild guild : event.getJDA().getGuilds()) {
+				config.servers.get(guild.getId()).name = guild.getName();
 		}
-		LOGGER.info(config.servers);
+		ArrayList<String> removalQueue= new ArrayList<>();
+		for(Map.Entry<String, ServerSettings> settingsEntry : config.servers.entrySet()){
+			if(settingsEntry.getValue().name.isEmpty()){
+				removalQueue.add(settingsEntry.getKey());
+			}
+		}
+		for(String Id: removalQueue){
+			config.servers.remove(Id);
+		}
+		config.save();
 	}
 
 
@@ -76,11 +73,11 @@ public class OmenaBot extends ListenerAdapter {
 	@SuppressWarnings({"unchecked", "OptionalGetWithoutIsPresent"})
 	public void onGuildMessageReceived (@NotNull GuildMessageReceivedEvent event) {
 		BotCommandSource source = new BotCommandSource(event, this);
-		ConfigManager.ServerSettings settings = config.servers.get(event.getMessage().getGuild().getId());
+		ServerSettings settings = config.servers.get(event.getMessage().getGuild().getId());
 		String prefix = settings.prefix;
 		if (event.getMessage().getContentRaw().startsWith(prefix) && !event.getMessage().getContentRaw().startsWith(prefix.repeat(2))) {
 			String messageContentsNoPrefix = event.getMessage().getContentRaw().replaceFirst(prefix.translateEscapes(), "");
-			ParseResults<BotCommandSource> parse = dispatcher.parse(messageContentsNoPrefix, source);
+			ParseResults<Object> parse = dispatcher.parse(messageContentsNoPrefix, source);
 			if (parse.getContext().getCommand() != null) {
 				if (parse.getExceptions().isEmpty()) {
 					try {
@@ -89,7 +86,7 @@ public class OmenaBot extends ListenerAdapter {
 						LOGGER.fatal("There's a bug in com.mojang:brigadier; error:", e);
 					}
 				} else {
-					Map<CommandNode<BotCommandSource>, CommandSyntaxException> e = parse.getExceptions();
+					Map<CommandNode<Object>, CommandSyntaxException> e = parse.getExceptions();
 					final boolean a[] = {false};
 					e.forEach((key, error) -> a[0] |= error.getMessage().startsWith("Unknown command at position "));
 					if (a[0]) {
@@ -98,10 +95,10 @@ public class OmenaBot extends ListenerAdapter {
 				}
 			}
 		} else {
-			HashMap<String, ConfigManager.ServerSettings.Id_s> channels = settings.channels;
+			HashMap<String, ServerSettings.Id_s> channels = settings.channels;
 			if (channels != null) {
-				ConfigManager.ServerSettings.Id_s imageOnly = channels.get("image-only");
-				if(imageOnly != null) {
+				ServerSettings.Id_s imageOnly = channels.get("image-only");
+				if (imageOnly != null) {
 					if (imageOnly.get() instanceof Long) {
 						Long channel = (Long) imageOnly.get();
 						if (channel.equals(event.getChannel().getIdLong()) && event.getMessage().getAttachments().size() < 1) {
@@ -124,33 +121,45 @@ public class OmenaBot extends ListenerAdapter {
 		discordApi.shutdown();
 	}
 
+	public BotUI getUi () {
+		return ui;
+	}
+
+	public JDA getApi () {
+		return discordApi;
+	}
+
 	public static class BotCommandSource {
 		MessageEvent event;
 		private OmenaBot bot;
 		final long createdTime = new Date().getTime();
 
-		public BotCommandSource (MessageReceivedEvent event, OmenaBot omenaBot) {
-			this.event = new MessageEvent(event);
-			this.bot = omenaBot;
-		}
+//		public BotCommandSource (MessageReceivedEvent event, OmenaBot omenaBot) {
+//			this.event = new MessageEvent(event);
+//			this.bot = omenaBot;
+//		}
 
 		public BotCommandSource (GuildMessageReceivedEvent event, OmenaBot omenaBot) {
 			this.event = new MessageEvent(event);
 			this.bot = omenaBot;
 		}
 
-		public static class MessageEvent extends Event{
+		public long getCreatedTime () {
+			return createdTime;
+		}
+
+		public static class MessageEvent extends Event {
 
 			private Message message;
 			private MessageChannel channel;
 
-			public MessageEvent (MessageReceivedEvent event){
+			public MessageEvent (MessageReceivedEvent event) {
 				this(event.getJDA());
 				message = event.getMessage();
 				channel = event.getChannel();
 			}
 
-			public MessageEvent (GuildMessageReceivedEvent event){
+			public MessageEvent (GuildMessageReceivedEvent event) {
 				this(event.getJDA());
 				channel = event.getChannel();
 				message = event.getMessage();
@@ -160,13 +169,13 @@ public class OmenaBot extends ListenerAdapter {
 				super(api);
 			}
 
-			public MessageChannel getChannel(){
+			public MessageChannel getChannel () {
 				return channel;
 			}
 
-			public Message getMessage () {
-				return message;
-			}
+//			public Message getMessage () {
+//				return message;
+//			}
 
 		}
 

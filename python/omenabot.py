@@ -298,13 +298,13 @@ class OmenaBot(commands.bot.Bot):
 		self.home = os.getenv('HOME')
 
 		try:
-			stats = os.stat(f"{self.rundir}/logs/latest.log")
+			stats = os.stat(f"{self.rundir}/python/logs/latest.log")
 			created = time.gmtime(stats.st_ctime)
 			created_time = f'{created[0]}_{str(created[1]).rjust(2, "0")}_{str(created[2]).rjust(2, "0")}_{str(created[3]).rjust(2, "0")}_{str(created[4]).rjust(2, "0")}_{str(created[5]).rjust(2, "0")}'
-			os.rename(f"{self.rundir}/logs/latest.log", f"{self.rundir}/logs/{created_time}.log")
+			os.rename(f"{self.rundir}/python/logs/latest.log", f"{self.rundir}/python/logs/{created_time}.log")
 		except FileNotFoundError:
 			print(f"{Style.DIM}No latest log.")
-		logging.basicConfig(format="[%(asctime)s] [%(threadName)s|%(name)s/%(levelname)-5s] %(message)s", filename=f'{self.rundir}/logs/latest.log', level=logging.INFO)
+		logging.basicConfig(format="[%(asctime)s] [%(threadName)s|%(name)s/%(levelname)-5s] %(message)s", filename=f'{self.rundir}/python/logs/latest.log', level=logging.INFO)
 		self.logger = logging.getLogger("bot.main")
 		self.logger.info(f'Initialized at {self.init_time}.')
 
