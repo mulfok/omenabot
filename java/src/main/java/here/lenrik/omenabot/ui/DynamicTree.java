@@ -8,11 +8,13 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import org.apache.logging.log4j.LogManager;
+
 public class DynamicTree extends JPanel {
+	private final Toolkit toolkit = Toolkit.getDefaultToolkit();
 	protected DefaultMutableTreeNode rootNode;
 	protected DefaultTreeModel model;
 	protected JTree tree;
-	private final Toolkit toolkit = Toolkit.getDefaultToolkit();
 	protected ArrayList<TreeNode> protectedNodes = new ArrayList<>();
 
 	public DynamicTree () {
@@ -147,8 +149,8 @@ public class DynamicTree extends JPanel {
 			int index = e.getChildIndices()[0];
 			node = (DefaultMutableTreeNode) (node.getChildAt(index));
 
-			System.out.println("The user has finished editing the node.");
-			System.out.println("New value: " + node.getUserObject());
+			LogManager.getRootLogger().info("The user has finished editing the node.");
+			LogManager.getRootLogger().info("New value: " + node.getUserObject());
 		}
 
 		public void treeNodesInserted (TreeModelEvent e) {

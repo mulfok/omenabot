@@ -4,10 +4,12 @@ import here.lenrik.omenabot.config.Responses;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreeNode;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,10 +22,7 @@ public class ResponsesPanel extends JPanel implements ActionListener {
 
 	private final DynamicTree responses;
 	private final BotUI botUi;
-	private Responses config;
-
 	private final DefaultMutableTreeNode f;
-	private final DefaultMutableTreeNode hack;
 	private final DefaultMutableTreeNode anime;
 	private final DefaultMutableTreeNode jokes;
 	private final DefaultMutableTreeNode _8ball;
@@ -36,12 +35,14 @@ public class ResponsesPanel extends JPanel implements ActionListener {
 	private final DefaultMutableTreeNode hack_mail_body;
 	private final DefaultMutableTreeNode hack_companies;
 	private final DefaultMutableTreeNode hack_mail_provider;
+	private Responses config;
 
 	public ResponsesPanel (BotUI botUi) {
 		super(new BorderLayout());
 		this.botUi = botUi;
 		responses = new DynamicTree("responses");
 		responses.protectNode(f = responses.addObject("f"));
+		DefaultMutableTreeNode hack;
 		responses.protectNode(hack = responses.addObject("hack"));
 		responses.protectNode(anime = responses.addObject("anime"));
 		responses.protectNode(jokes = responses.addObject("jokes"));
@@ -93,7 +94,10 @@ public class ResponsesPanel extends JPanel implements ActionListener {
 		switch (command) {
 			case RELOAD_COMMAND -> updateConfig();
 			case SAVE_COMMAND -> {
-
+				config.f.clear();
+				for (TreeNode child : Collections.list(f.children())) {
+					config.f.add((String) ((DefaultMutableTreeNode) child).getUserObject());
+				}
 			}
 			//Add button clicked
 			case ADD_COMMAND -> responses.addObject("");
@@ -104,7 +108,6 @@ public class ResponsesPanel extends JPanel implements ActionListener {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	public void updateConfig () {
 		config = botUi.getBot().config.responses;
 		f.removeAllChildren();
@@ -121,45 +124,45 @@ public class ResponsesPanel extends JPanel implements ActionListener {
 		hack_mail_body.removeAllChildren();
 		hack_mail_provider.removeAllChildren();
 		for (String f : config.f) {
-			responses.addObject(this.f, f);
+			responses.addObject(this.f, f).setAllowsChildren(false);
 		}
 		for (String ball : config._8ball) {
-			responses.addObject(_8ball, ball);
+			responses.addObject(_8ball, ball).setAllowsChildren(false);
 		}
 		for (Responses.Joke joke : config.jokes) {
-			responses.addObject(responses.addObject(jokes, joke.joke), joke.punchline);
+			responses.addObject(responses.addObject(jokes, joke.joke), joke.punchline).setAllowsChildren(false);
 		}
 		for (String fact : config.trivia) {
-			responses.addObject(trivia, fact);
+			responses.addObject(trivia, fact).setAllowsChildren(false);
 		}
 		for (String win : config.pong_win) {
-			responses.addObject(pong_win, win);
+			responses.addObject(pong_win, win).setAllowsChildren(false);
 		}
 		for (String loss : config.pong_loss) {
-			responses.addObject(pong_loss, loss);
+			responses.addObject(pong_loss, loss).setAllowsChildren(false);
 		}
 		for (String anime : config.anime) {
-			responses.addObject(this.anime, anime);
+			responses.addObject(this.anime, anime).setAllowsChildren(false);
 		}
-		for (String payment : (ArrayList<String>) config.hack.get("payment")) {
-			responses.addObject(hack_payment, payment);
+		for (String payment : config.hack.payment) {
+			responses.addObject(hack_payment, payment).setAllowsChildren(false);
 		}
-		for (String size : (ArrayList<String>) config.hack.get("homework")) {
-			responses.addObject(hack_homework, size);
+		for (String size : config.hack.homework) {
+			responses.addObject(hack_homework, size).setAllowsChildren(false);
 		}
-		for (String company : (ArrayList<String>) config.hack.get("companies")) {
-			responses.addObject(hack_companies, company);
+		for (String company : config.hack.companies) {
+			responses.addObject(hack_companies, company).setAllowsChildren(false);
 		}
-		for (String provider : (ArrayList<String>) config.hack.get("mail_provider")) {
-			responses.addObject(hack_mail_provider, provider);
+		for (String provider : config.hack.mail_provider) {
+			responses.addObject(hack_mail_provider, provider).setAllowsChildren(false);
 		}
-		for (ArrayList<String> body : (ArrayList<ArrayList<String>>) config.hack.get("mail_body")) {
+		for (ArrayList<String> body : config.hack.mail_body) {
 			responses.addObject(hack_mail_body, body.get(0) + ":" + body.get(1));
 		}
 		for (Map.Entry<String, HashMap<String, String>> version : config.mc_commands.entrySet()) {
 			DefaultMutableTreeNode versionNode = responses.addObject(mc_commands, version.getKey());
 			for (Map.Entry<String, String> command : version.getValue().entrySet()) {
-				responses.addObject(responses.addObject(versionNode, command.getKey()), command.getValue());
+				responses.addObject(responses.addObject(versionNode, command.getKey()), command.getValue()).setAllowsChildren(false);
 			}
 		}
 	}

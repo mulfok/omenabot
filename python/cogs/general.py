@@ -9,7 +9,7 @@ from math import sin, cos, tan, sqrt, asin, acos, atan, ceil, floor, pow, degree
 import discord
 from discord.ext import commands
 
-from python.omenabot import OmenaBot
+from omenabot import OmenaBot
 
 
 # def remcmd(obj):

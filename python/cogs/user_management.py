@@ -4,7 +4,7 @@ import logging
 import discord
 from discord.ext import commands
 
-from python.omenabot import OmenaBot
+from omenabot import OmenaBot
 
 
 class UserManagement(commands.Cog):

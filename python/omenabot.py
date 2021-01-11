@@ -327,7 +327,7 @@ class OmenaBot(commands.bot.Bot):
 
 		self.logger.info(f'Loading cogs.')
 
-		for filename in os.listdir(f'{self.rundir}/cogs'):
+		for filename in os.listdir(f'{self.rundir}/python/cogs'):
 			if filename.endswith('.py'):
 				print(filename)
 				if not filename.startswith("gui") or "-gui" in sys.argv:

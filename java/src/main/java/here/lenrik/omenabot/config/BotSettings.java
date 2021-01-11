@@ -17,8 +17,11 @@ public class BotSettings {
 	public HashMap<String, Dev> devs;
 
 	public static BotSettings load (String location) throws IOException {
-		String json = Files.readString(Path.of(location));
-		return ConfigManager.gson.fromJson(json, BotSettings.class);
+		return ConfigManager.gson.fromJson(Files.readString(Path.of(location)), BotSettings.class);
+	}
+
+	public static void save (String fisrst, BotSettings settings, String... next) throws IOException {
+		Files.writeString(Path.of(fisrst, next), ConfigManager.gson.toJson(settings));
 	}
 
 	public static class Dev {
