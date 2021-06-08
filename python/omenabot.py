@@ -75,7 +75,7 @@ class OmenaBot(commands.bot.Bot):
 			return self.servers[str(message.guild.id)].get('prefix')
 
 	status = cycle(['help - Brings up commands', 'aboutme - Shows bot info', 'trivia - Fun facts!',
-									'changeprefix - Customise server prefix!', 'Ping me to get prefix on the server'])
+					'changeprefix - Customise server prefix!', 'Ping me to get prefix on the server'])
 
 	# Various debug console message events
 	async def on_connect(self):
@@ -86,7 +86,7 @@ class OmenaBot(commands.bot.Bot):
 
 	async def on_ready(self):
 		# set status, change activity and print ready and start loop
-		self.change_status.start()
+		self.change_status.restart()
 		# hail_theOwner.start()
 		await self.change_presence(status=discord.Status.online, activity=discord.Game('~helpme for commands!'))
 		self.logger.info(f'Logged in as {self.user.name}')
@@ -151,11 +151,13 @@ class OmenaBot(commands.bot.Bot):
 			if not self.servers.get(f'{member_after.guild.id}') is None:
 				if not self.servers[f'{member_after.guild.id}'].get("nicks") is None:
 					if f'{member_after.id}' in self.servers[f'{member_after.guild.id}']["nicks"]:
-						if not self.servers[f'{member_after.guild.id}']["nicks"][f'{member_after.id}'] == member_after.nick:
+						if not self.servers[f'{member_after.guild.id}']["nicks"][
+								   f'{member_after.id}'] == member_after.nick:
 							print(f'member changed nick to {member_before.nick} while having '
-										f'permanick {self.servers[f"{member_after.guild.id}"]["nicks"][f"{member_after.id}"]}')
+								  f'permanick {self.servers[f"{member_after.guild.id}"]["nicks"][f"{member_after.id}"]}')
 							await member_after.edit(reason="permanent nickname",
-																			nick=self.servers[f'{member_after.guild.id}']["nicks"][f'{member_after.id}'])
+													nick=self.servers[f'{member_after.guild.id}']["nicks"][
+														f'{member_after.id}'])
 
 	async def on_member_remove(self, member: discord.Member):
 		if self.servers[f'{member.guild.id}'].get('name') is None:
@@ -174,36 +176,23 @@ class OmenaBot(commands.bot.Bot):
 
 	async def on_message(self, message: discord.Message):
 		if not message.author == self.user:
+			ctx = await self.get_context(message)
 			if message.channel.type.name == 'private':
 				if not message.author.bot and message.content:
-					ctx = await self.get_context(message)
 					await self.invoke(ctx)
-					if not ctx.command == "close":
+					if not ctx.command:
 						await message.channel.send(
-							"I'm a bot, and certanly not smart enough to talk to you, my friend ¯\\_(°^°)\\_/¯", delete_after=2)
+							"I'm a bot, and certanly not smart enough to talk to you, my friend ¯\\\\_(°^°)\\_/¯",
+							delete_after=2)
 			else:
-				if self.servers.get(f'{message.guild.id}') is None:
-					self.servers[f'{message.guild.id}'] = {}
-					self.servers[f'{message.guild.id}']['name'] = message.guild.name
-					with open(f'{self.rundir}/private/servers.json', 'w') as server_file:
-						json.dump(self.servers, server_file, indent=2)
-				if self.servers[f'{message.guild.id}'].get("name") is None:
-					self.servers[f'{message.guild.id}']['name'] = message.guild.name
-					with open(f'{self.rundir}/private/servers.json', 'w') as server_file:
-						json.dump(self.servers, server_file, indent=2)
-				if not self.servers[f'{message.guild.id}']["name"] == message.guild.name:
-					self.servers[f'{message.guild.id}']['name'] = message.guild.name
-					with open(f'{self.rundir}/private/servers.json', 'w') as server_file:
-						json.dump(self.servers, server_file, indent=2)
-				channels = self.servers[f'{message.guild.id}'].get('channels')
-				if channels is not None:
-					image_only = channels.get('image-only')
-					if image_only is not None:
+				if 'channels' in self.servers[f'{message.guild.id}']:
+					channels = self.servers[f'{message.guild.id}']
+					if 'image_only' in channels:
+						image_only = channels['image-only']
 						if message.channel.permissions_for(message.guild.get_member(self.user.id)).manage_messages:
 							if (message.channel.id in image_only) if isinstance(image_only, list) else (
-											message.channel.id == image_only):
+									message.channel.id == image_only):
 								if not message.attachments:
-									ctx = await self.get_context(message)
 									if not ctx.command:
 										commands_cog = self.get_cog("General")
 										if commands_cog:
@@ -219,11 +208,15 @@ class OmenaBot(commands.bot.Bot):
 						guilds = ""
 						for guild in self.guilds:
 							guilds = "\n".join([guilds, guild.name + f' (ID: {guild.id})'])
-						await message.author.send(f"Currently i'm in {len(self.guilds)}, which are ```fix\n{guilds}\n```")
+						await message.author.send(
+							f"Currently i'm in {len(self.guilds)}, which are ```fix\n{guilds}\n```")
 					else:
 						await message.delete()
 						self.logger.info(f"Bot was pinged in {message.guild.id}, by {message.author.id}")
 						await message.channel.send(f'Current prefix is "`{await self.get_prefix(message)}`"')
+				if "who is an idiot?" in message.content and f'{message.author.id}' in self.config['devs']:
+					await message.channel.send(
+						f"<@{message.author.id}>, you are an idiot {'<:kekw:851854426665910282>' if message.guild.id == 666295714724446209 else ''}")
 
 	####################################
 	# error catch area
@@ -240,7 +233,8 @@ class OmenaBot(commands.bot.Bot):
 
 		# checks to see if permissions all exist
 		if isinstance(error, commands.MissingPermissions):
-			self.logger.error(f"{ctx.author.name} (ID {ctx.author.id}) tried running command they don't have permission to.")
+			self.logger.error(
+				f"{ctx.author.name} (ID {ctx.author.id}) tried running command they don't have permission to.")
 			await ctx.send("You're missing required permissions! :x:")
 			print("Someone tried to run a command that they don't have permissions for!")
 			return
@@ -283,7 +277,12 @@ class OmenaBot(commands.bot.Bot):
 		self.unload_extension(f'cogs.{extension}')
 
 	def __init__(self, **options):
-		super().__init__(self.get_prefix, **options)
+		intents = discord.Intents.default()
+		intents.members = True
+		intents.reactions = True
+		# intents.typing = True
+		# intents.presences = True
+		super().__init__(self.get_prefix, intents=intents, **options)
 
 		self.start_time_ns: int = 0
 		self.start_time = ""
@@ -304,7 +303,8 @@ class OmenaBot(commands.bot.Bot):
 			os.rename(f"{self.rundir}/python/logs/latest.log", f"{self.rundir}/python/logs/{created_time}.log")
 		except FileNotFoundError:
 			print(f"{Style.DIM}No latest log.")
-		logging.basicConfig(format="[%(asctime)s] [%(threadName)s|%(name)s/%(levelname)-5s] %(message)s", filename=f'{self.rundir}/python/logs/latest.log', level=logging.INFO)
+		logging.basicConfig(format="[%(asctime)s] [%(threadName)s|%(name)s/%(levelname)-5s] %(message)s",
+							filename=f'{self.rundir}/python/logs/latest.log', level=logging.INFO)
 		self.logger = logging.getLogger("bot.main")
 		self.logger.info(f'Initialized at {self.init_time}.')
 
@@ -336,12 +336,16 @@ class OmenaBot(commands.bot.Bot):
 		self.logger.info(f'Loading complete.')
 		print("Loading complete.")
 
-	def run_bot(self, func, *args, **kwargs):
+	def run_bot(self, func, token_name):
+		if token_name not in self.config["tokens"]:
+			raise NameError(f"There's no token for bot account {token_name}, please check.")
+		else:
+			print(f'Starting as {Fore.CYAN}{Style.BRIGHT}{token_name}{Style.RESET_ALL} bot user')
 		now = time.gmtime()
 		self.start_time_ns = time.monotonic_ns()
 		self.start_time = f'{now[0]}_{now[1]}_{now[2]}_{now[3]}_{now[4]}_{now[5]}'
 		print(f"Started at {Style.BRIGHT}{Fore.YELLOW}{self.start_time}")
-		func(*args, **kwargs)
+		func(self.config["tokens"].get(token_name))
 
 	async def close_bot(self, name="console", name_id=0):
 		print("close_bot called")

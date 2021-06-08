@@ -4,7 +4,7 @@ import json
 import logging
 import random
 import re
-from math import sin, cos, tan, sqrt, asin, acos, atan, ceil, floor, pow, degrees as deg, radians as rad
+from math import sin, cos, tan, sqrt, asin, acos, atan, ceil, floor, pow, degrees as deg, radians as rad, pi
 
 import discord
 from discord.ext import commands
@@ -34,8 +34,8 @@ class General(commands.Cog):
 	# @remcmd
 	@commands.command()
 	async def dnd(self, ctx: discord.ext.commands.Context, command:str, *args,**kwargs):
-		if not self.bot.servers[f'{ctx.guild.id}'].get("channels") is None:
-			if not self.bot.servers[f'{ctx.guild.id}'].get("channels").get("dnd") is None:
+		if "channels" in self.bot.servers[f'{ctx.guild.id}']:
+			if "dnd" in self.bot.servers[f'{ctx.guild.id}']["channels"]:
 				if not self.bot.servers[f'{ctx.guild.id}']["channels"]["dnd"] == ctx.channel.id:
 					ctx.message.content = (await self.bot.get_prefix(ctx.message)) + " in_this_channel"
 					raise commands.CommandNotFound()
@@ -65,13 +65,14 @@ class General(commands.Cog):
 		await ctx.send(embed=embed)
 
 	@commands.command(aliases=["setprefix"], help="Sets command prefix.\nOnly admins can use it.",
-										brief="Sets command prefix.", hidden=False)
+										brief="Sets command prefix.", hidden=True)
 	async def changeprefix(self, ctx: discord.ext.commands.Context, prefix):
 		if ctx.author.guild_permissions.administrator or not self.bot.config['devs'].get(f'{ctx.author.id}') is None:
 			with open(f'{self.bot.rundir}/private/servers.json', 'r') as server_file:
 				servers = json.load(server_file)
 
 			self.logger.info(f'Prefix changed to {prefix} for server {ctx.guild.name} (ID {ctx.guild.id})')
+			self.bot.servers[str(ctx.guild.id)]['prefix'] = prefix
 			servers[str(ctx.guild.id)]['prefix'] = prefix
 			servers[str(ctx.guild.id)]['name'] = str(ctx.guild.name)
 			await ctx.send(f'Prefix changed to `{prefix}`! :white_check_mark:')
@@ -87,13 +88,19 @@ class General(commands.Cog):
 		Command for configuring different bot parameters for current  guild.
 		"""
 		try:
-			if param == "permanick":
+			if param == "prefix":
+				if len(value) < 1:
+					raise commands.MissingRequiredArgument(inspect.Parameter(name="prefix", kind=inspect._ParameterKind.VAR_POSITIONAL))
+				await self.changeprefix(ctx, " ".join(value))
+			elif param == "permanick":
 				cog = self.bot.get_cog("UserManagement")
 				command = cog.setnick
-				await command(ctx, value)
+				if len(value) < 1:
+					raise commands.MissingRequiredArgument(inspect.Parameter(name="nick", kind=inspect._ParameterKind.VAR_POSITIONAL))
+				await command(ctx, *value)
 				return
 			elif param == "channel":
-				if ctx.author.guild_permissions.manage_channels or not self.bot.config["devs"].get(f"{ctx.author.id}") is None:
+				if ctx.author.guild_permissions.manage_channels or str(ctx.author.id) in self.bot.config["devs"]:
 					if len(value) < 1:
 						raise commands.MissingRequiredArgument(
 							inspect.Parameter(name="chat", kind=inspect._ParameterKind.VAR_POSITIONAL))
@@ -159,7 +166,7 @@ class General(commands.Cog):
 												 "be used by developer.", brief="Test if logging works.", hidden=True)
 	async def dummy_log(self, ctx: discord.ext.commands.Context):
 		attempt_id = ctx.author.id
-		if attempt_id == 465816879072542720 or attempt_id == 437296242817761292:  # first id is mulfok, second is lenrik
+		if attempt_id in [465816879072542720, 437296242817761292, 746090211087351900]:  # first id is mulfok, second is lenrik, third is Alice
 			self.logger.debug("dummy debug log message")
 			self.logger.info("dummy info log message")
 			self.logger.warning("dummy warning log message")
@@ -181,17 +188,14 @@ class General(commands.Cog):
 			user, response = ctx.guild.get_member(self.bot.user.id), random.choice(self.bot.responses['pong_win'])
 			if random.randrange(1000) < 493:
 				user, response = ctx.author, random.choice(self.bot.responses['pong_loss'])
-			name = user.nick
-			if not name:
-				name = user.name
-			await ctx.send(f'{response}\n**{name}** is victorous')
+			await ctx.send(f'{response}\n**{user.nick if user.nick else user.name}** is victorous')
 
 	# Commands area
 	@commands.command()
 	async def ping(self, ctx: commands.context, *arg, **kvarg):
 		if arg == ():
 			# simply reply with 'Pong!' and milliseconds
-			await ctx.send(f'Pong! {round(self.bot.latency * 1000)}ms')
+			await ctx.send(f'Pong! ({round(self.bot.latency * 1000)}ms)')
 		else:
 			pings = 1
 			delay = 1
@@ -235,12 +239,14 @@ class General(commands.Cog):
 		if command == "ping":
 			if not ctx.message.mentions == []:
 				user = ctx.message.mentions[0]  # int(varg[3:-1]))
+			elif ctx.guild.get_member(int(arg[0])):
+				user = ctx.guild.get_member(int(arg[0]))
 			else:
 				user = ctx.author
 			enabled = self.bot.config['ping'].get(f'{user.id}')
 			if enabled is None:
 				enabled = False
-			if ctx.author == user or ctx.author.guild_permissions.manage_messages:
+			if ctx.author == user or ctx.author.guild_permissions.manage_messages or ctx.author.id in self.bot.config['devs']:
 				self.bot.config['ping'][f'{user.id}'] = not enabled
 				with open(f'{self.bot.rundir}/private/bot.json', 'w') as file:
 					json.dump(self.bot.config, file, indent=2)
@@ -278,7 +284,7 @@ class General(commands.Cog):
 		await ctx.send(embed=fembed)
 
 	# Random Anime Song Command
-	@commands.command(aliases=["animesong"])
+	@commands.command(aliases=["animesong", "anime"])
 	async def randomanimesong(self, ctx):
 		await ctx.send(f"The developers are not weebs I swear :eyes:\n{random.choice(self.bot.responses['anime'])}")
 
@@ -287,7 +293,7 @@ class General(commands.Cog):
 		# output random answer
 		await ctx.message.delete()
 		await ctx.send(
-			f'Question: "`{question}``" by {ctx.author.name}\nAnswer: {random.choice(self.bot.responses["8ball"])}')
+			f'Question: "`{question}`" by {ctx.author.name}\nAnswer: {random.choice(self.bot.responses["_8ball"])}')
 
 	@commands.command()
 	async def trivia(self, ctx):
@@ -329,6 +335,8 @@ class General(commands.Cog):
 				await asyncio.sleep(1)
 				await asyncio.gather(message.delete(), error.delete())
 			else:
+				for i in range(amount):
+					ctx.channel
 				await ctx.channel.purge(limit=amount + 1)
 				await asyncio.sleep(0.1)
 				await ctx.send(f"Removed {amount} messages! :white_check_mark:", delete_after=1)
@@ -351,7 +359,7 @@ class General(commands.Cog):
 	@commands.command(aliases=["quit", "exit"], hidden=True)
 	async def close(self, ctx):
 		if not self.bot.config["devs"].get(f"{ctx.author.id}") is None and \
-						not self.bot.config["devs"][f"{ctx.author.id}"]["privileges"].index("close") == -1:
+						"close" in self.bot.config["devs"][f"{ctx.author.id}"]["privileges"]:
 			# first id is mulfok, second is lenrik
 			await ctx.send("Shutting down... See ya! :lock:", delete_after=0.5)
 			await asyncio.sleep(0.6)
@@ -418,6 +426,7 @@ class General(commands.Cog):
 		pow(value, pow) raise value to power
 		deg(value) convert radian value to degrees
 		rad(value) convert degree value to radians
+		PI good old pi
 		"""
 
 		not_escaped_equation = [re.sub(r"\\$", " ", s, 0, re.MULTILINE) for s in equation]
@@ -435,7 +444,8 @@ class General(commands.Cog):
 			"floor": floor,
 			"pow": pow,
 			"deg": deg,
-			"rad": rad
+			"rad": rad,
+			"PI": pi
 		}
 		variable_decl_reg_ex = r"(?:(\w*)=;)"
 		matches = re.finditer(variable_decl_reg_ex, spliced_equation, re.MULTILINE)
@@ -463,7 +473,6 @@ class General(commands.Cog):
 	async def alcohol(self, ctx):
 		if ctx.author.id == 397573419811602442:  # karnage 397573419811602442
 			await ctx.seyound("Go drink alcohol you madman. :beer:")
-
 		else:
 			await ctx.send("This command isn't for you! :x:")
 
@@ -484,7 +493,7 @@ class General(commands.Cog):
 	# coffee command
 	@commands.command(hidden=True)
 	async def coffee(self, ctx):
-		if ctx.author.id == 721045183982207046:  # lenrick 721045183982207046
+		if ctx.author.id == 721045183982207046:  # lenrik 721045183982207046
 			await ctx.send("Go drink coffee you madman. :coffee:")
 
 		else:

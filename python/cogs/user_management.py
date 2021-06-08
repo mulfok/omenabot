@@ -36,7 +36,7 @@ class UserManagement(commands.Cog):
 	@commands.command()
 	@commands.has_permissions(administrator=True)
 	# set params and BAN
-	async def ban(self, ctx: commands.Context, member, *, reason=None):
+	async def ban(self, ctx: commands.Context, member: discord.Member, *, reason=None):
 		perms = ctx.message.author.permissions_in(ctx.channel)
 		if perms.administrator or not self.bot.config["devs"].get(f"{ctx.author.id}") is None:
 			member = ctx.guild.get_member(int(member[3: -1]))
@@ -66,30 +66,51 @@ class UserManagement(commands.Cog):
 	@commands.command()
 	async def setnick(this, ctx: commands.Context, *value: str):
 		if not ctx.author.guild_permissions.manage_nicknames and not ctx.author.guild_permissions.administrator and \
-						this.bot.config["devs"].get(f"{ctx.author.id}") is None:
+				this.bot.config["devs"].get(f"{ctx.author.id}") is None:
 			raise commands.MissingPermissions(discord.permissions.Permissions(permissions=1 << 27))
+		print(value)
+		member = None
 		if len(ctx.message.mentions) == 1:
 			member = ctx.message.mentions[0]
-		elif len(value[0]) == len("564489099512381440"):
-			member = ctx.guild.get_member(int(value[0]))
-		else:
-			member = ctx.guild.get_member(int(value[0][2:-1]))
+			print(f"using mention {member}")
+		else:  # len(value[0]) == len("564489099512381440"):
+			try:
+				member = ctx.guild.get_member(int(value[0]))
+			except ValueError:
+				pass
+			print(f"using id strat: {member}")
+		if not member:
+			try:
+				member = ctx.guild.get_member(int(value[0][2:-1]))
+			except ValueError:
+				pass
+			print(f"using alt id strat: {member}")
+		if not member:
+			member = discord.utils.find(lambda m: m.name.startswith(value[0]), ctx.guild.members)
+			print(f"using discord.py's find() strat: {member}")
 		await ctx.message.delete()
-		if this.bot.servers[f'{ctx.guild.id}'].get("nicks") is None:
+		if not member:
+			await ctx.send(f"сould noy find a user by {value[0]}")
+			return
+		if 'nicks' not in this.bot.servers[f'{ctx.guild.id}']:
 			this.bot.servers[f'{ctx.guild.id}']["nicks"] = {}
+		if 'nicks_pre' not in this.bot.servers[f'{ctx.guild.id}']:
+			this.bot.servers[f'{ctx.guild.id}']["nicks_pre"] = {}
 		while isinstance(value, tuple) and isinstance(value[0], tuple):
 			value = value[0]
 		if len(value) < 2:
 			if not this.bot.servers[f'{ctx.guild.id}']["nicks"].get(f'{member.id}') is None:
 				this.bot.servers[f'{ctx.guild.id}']["nicks"].pop(f'{member.id}')
 				await ctx.send(f"reset permanent nick for {member}", delete_after=3)
-				await member.edit(nick=None)
+				await member.edit(nick=this.bot.servers[f'{ctx.guild.id}']["nicks_pre"].pop(f'{member.id}'))
 		else:
 			permanentnick = ' '.join(value[1:])
 			if len(permanentnick) > 32:
 				await ctx.send(f"Nickname `{permanentnick}` is too long (32 characters max).", delete_after=7)
 				return
 			this.bot.servers[f'{ctx.guild.id}']["nicks"][f'{member.id}'] = permanentnick
+			if str(member.id) not in this.bot.servers[f'{ctx.guild.id}']['nicks_pre']:
+				this.bot.servers[f'{ctx.guild.id}']['nicks_pre'][f'{member.id}'] = member.nick
 			await ctx.send(f"permanent nick for {member} is now set to `{permanentnick}`", delete_after=3)
 			await member.edit(reason="no reason, lol", nick=permanentnick)
 		with open(f'{this.bot.rundir}/private/servers.json', 'w') as f:
