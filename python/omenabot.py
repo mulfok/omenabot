@@ -8,12 +8,15 @@ import time
 from itertools import cycle
 
 import discord
+import regex
 from colorama import Fore, Style, init as init_terminal_styling
 from discord.ext import commands, tasks
 
 
 # List comprehesions: wanted_roles = [i[7:] for i in message.content.split("\n")]
 # Lambdas: wanted_roles = list(map(lambda i: i[7:], message.content.split("\n")))
+
+
 class OmenaBot(commands.bot.Bot):
 
 	def command(name=None, cls=None, **attrs):
@@ -176,7 +179,7 @@ class OmenaBot(commands.bot.Bot):
 
 	async def on_message(self, message: discord.Message):
 		if not message.author == self.user:
-			ctx = await self.get_context(message)
+			ctx: commands.Context = await self.get_context(message)
 			if message.channel.type.name == 'private':
 				if not message.author.bot and message.content:
 					await self.invoke(ctx)
@@ -200,8 +203,10 @@ class OmenaBot(commands.bot.Bot):
 										else:
 											await message.delete()
 										return
-				if not message.content.startswith(".."):
-					await self.process_commands(message)
+				if ctx.prefix and (ctx.command or regex.match("^" + ctx.prefix + "\p{L}", message.content)):
+					await self.invoke(ctx)
+					# await ctx.invoke()
+					# await self.process_commands(message)
 				if message.content[0:22] == f"<@!{self.user.id}>":
 					if message.content[23:] == "guilds":
 						await message.delete()
