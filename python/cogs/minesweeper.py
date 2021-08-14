@@ -3,9 +3,11 @@ import random
 import discord
 from discord.ext import commands
 
-errortxt = ('That is not formatted properly or valid positive integers weren\'t used, ',
-			'the proper format is:\n`[Prefix]minesweeper <columns> <rows> <bombs>`\n\n',
-			'You can give me nothing for random columns, rows, and bombs.')
+errortxt = (
+	'That is not formatted properly or valid positive integers weren\'t used, ',
+	'the proper format is:\n`[Prefix]minesweeper <columns> <rows> <bombs>`\n\n',
+	'leave columns rows and bombs empty for random values'
+)
 errortxt = ''.join(errortxt)
 
 

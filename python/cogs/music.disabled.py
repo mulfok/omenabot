@@ -93,7 +93,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
 		data = await loop.run_in_executor(None, partial)
 
 		if data is None:
-			raise YTDLError('Couldn\'t find anything that matches `{}`'.format(search))
+			raise YTDLError(f"Couldn't find anything that matches `{search}`")
 
 		if 'entries' not in data:
 			process_info = data
@@ -126,24 +126,6 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
 		return cls(ctx, discord.FFmpegPCMAudio(info['url'], **cls.FFMPEG_OPTIONS), data=info)
 
-	@staticmethod
-	def parse_duration(duration: int):
-		minutes, seconds = divmod(duration, 60)
-		hours, minutes = divmod(minutes, 60)
-		days, hours = divmod(hours, 24)
-
-		duration = []
-		if days > 0:
-			duration.append(f'{days} days')
-		if hours > 0:
-			duration.append(f'{hours} hours')
-		if minutes > 0:
-			duration.append(f'{minutes} minutes')
-		if seconds > 0:
-			duration.append(f'{seconds} seconds')
-
-		return ', '.join(duration)
-
 
 class Song:
 	__slots__ = ('source', 'requester')
@@ -153,15 +135,18 @@ class Song:
 		self.requester = source.requester
 
 	def create_embed(self):
-		embed = (discord.Embed(title='Now playing',
-													 description='```css\n{0.source.title}\n```'.format(self),
-													 color=discord.Color.blurple())
-						 .add_field(name='Duration', value=self.source.duration)
-						 .add_field(name='Now', value=self.source.duration)
-						 .add_field(name='Requested by', value=self.requester.mention)
-						 .add_field(name='Uploader', value='[{0.source.uploader}]({0.source.uploader_url})'.format(self))
-						 .add_field(name='URL', value='[Click]({0.source.url})'.format(self))
-						 .set_thumbnail(url=self.source.thumbnail))
+		embed = (
+			discord.Embed(
+				title='Now playing',
+				description='```css\n{0.source.title}\n```'.format(self),
+				color=discord.Color.blurple()
+			).add_field(
+				name='Duration', value=self.source.duration
+			).add_field(name='Now', value=self.source.duration)
+				.add_field(name='Requested by', value=self.requester.mention)
+				.add_field(name='Uploader', value='[{0.source.uploader}]({0.source.uploader_url})'.format(self))
+				.add_field(name='URL', value='[Click]({0.source.url})'.format(self))
+				.set_thumbnail(url=self.source.thumbnail))
 
 		return embed
 
@@ -366,7 +351,7 @@ class Music(commands.Cog):
 			return await ctx.send('Volume must be between 0 and 100')
 
 		ctx.voice_state.volume = volume / 100
-		await ctx.send('Volume of the player set to {}%'.format(volume))
+		await ctx.send(f'Volume of the player set to {volume}')
 
 	@commands.command(name='now', aliases=['current', 'playing'])
 	async def _now(self, ctx: commands.Context):
@@ -441,7 +426,7 @@ class Music(commands.Cog):
 
 		if len(ctx.voice_state.songs) == 0:
 			return await ctx.message.add_reaction('❎')
-			# await ctx.send('Empty queue.')
+		# await ctx.send('Empty queue.')
 
 		items_per_page = 10
 		pages = math.ceil(len(ctx.voice_state.songs) / items_per_page)
@@ -453,8 +438,7 @@ class Music(commands.Cog):
 		for i, song in enumerate(ctx.voice_state.songs[start:end], start=start):
 			queue += '`{0}.` [**{1.source.title}**]({1.source.url})\n'.format(i + 1, song)
 
-		embed = (discord.Embed(description='**{} tracks:**\n\n{}'.format(len(ctx.voice_state.songs), queue))
-						 .set_footer(text='Viewing page {}/{}'.format(page, pages)))
+		embed = discord.Embed(description='**{} tracks:**\n\n{}'.format(len(ctx.voice_state.songs), queue)).set_footer(text='Viewing page {}/{}'.format(page, pages))
 		await ctx.send(embed=embed)
 
 	@commands.command(name='shuffle')

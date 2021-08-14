@@ -1,84 +1,40 @@
-import json
 import logging
 import os
 import pathlib
 import random
 import sys
 import time
+import traceback
 from itertools import cycle
+
+import asyncio
 
 import discord
 import regex
 from colorama import Fore, Style, init as init_terminal_styling
 from discord.ext import commands, tasks
 
-
 # List comprehesions: wanted_roles = [i[7:] for i in message.content.split("\n")]
 # Lambdas: wanted_roles = list(map(lambda i: i[7:], message.content.split("\n")))
+from utils import DoubleIO, BufferIO, data
 
 
 class OmenaBot(commands.bot.Bot):
-
-	def command(name=None, cls=None, **attrs):
-		if cls is None:
-			cls = commands.Command
-
-		def decorator(func):
-			if isinstance(func, commands.Command):
-				raise TypeError('Callback is already a command.')
-			return cls(func, name=name, **attrs)
-
-		return decorator
-
-	@staticmethod
-	def parse_duration(duration: int):
-		minutes, seconds = divmod(duration, 60)
-		hours, minutes = divmod(minutes, 60)
-		days, hours = divmod(hours, 24)
-		weeks, wdays = divmod(days, 7)
-		months, mdays = divmod(days, 30)
-		years, ydays = divmod(days, 365)
-
-		duration = []
-		if years > 0:
-			duration.append(f'{years} days')
-			if ydays > 0:
-				duration.append(f'{ydays} days')
-		elif months > 0:
-			duration.append(f'{months} days')
-			if mdays > 0:
-				duration.append(f'{mdays} days')
-		elif weeks > 0:
-			duration.append(f'{weeks} days')
-			if wdays > 0:
-				duration.append(f'{wdays} days')
-		elif days > 0:
-			duration.append(f'{days} days')
-		if hours > 0:
-			duration.append(f'{hours} hours')
-		if minutes > 0:
-			duration.append(f'{minutes} minutes')
-		if seconds > 0:
-			duration.append(f'{seconds} seconds')
-
-		return ', '.join(duration)
 
 	# grabs server prefix from each server
 	async def get_prefix(self, message: discord.Message):
 		"""
 
 		:param message:
-		:return: prefix for :param client: in :param message:
+		:return: prefix for :param message:
 		"""
-		if message.channel.type.value == 1:
+		if not message.guild:
 			return '.'
-		if not self.servers[str(message.guild.id)].get('prefix'):
-			return '~'
-		else:
-			return self.servers[str(message.guild.id)].get('prefix')
+		return self.data.bot.setdefault("prefix_overrides", {}).get(self.token) or self.data.profiles[
+			str(message.guild.id)].setdefault("prefix", "~")
 
 	status = cycle(['help - Brings up commands', 'aboutme - Shows bot info', 'trivia - Fun facts!',
-					'changeprefix - Customise server prefix!', 'Ping me to get prefix on the server'])
+	                'set prefix - Customise server prefix!', 'Ping me to get prefix on the server'])
 
 	# Various debug console message events
 	async def on_connect(self):
@@ -90,8 +46,7 @@ class OmenaBot(commands.bot.Bot):
 	async def on_ready(self):
 		# set status, change activity and print ready and start loop
 		self.change_status.restart()
-		# hail_theOwner.start()
-		await self.change_presence(status=discord.Status.online, activity=discord.Game('~helpme for commands!'))
+		await self.change_presence(status=discord.Status.online, activity=discord.Game('~help for commands!'))
 		self.logger.info(f'Logged in as {self.user.name}')
 		self.logger.info(f'Client ID: {self.user.id}')
 		self.logger.info('---------')
@@ -101,76 +56,38 @@ class OmenaBot(commands.bot.Bot):
 	async def on_guild_join(self, guild):
 		self.logger.info(f'Bot joined {guild.name} (ID: {guild.id})')
 		print(f'{Fore.MAGENTA}Bot has joined {guild.name} (ID: {guild.id})!')
-		with open(f'{self.rundir}/private/servers.json', 'r') as server_file:
-			servers = json.load(server_file)
-
-		servers[str(guild.id)] = {}
-		servers[str(guild.id)]["prefix"] = '~'
-
-		with open(f'{self.rundir}/private/servers.json', 'w') as server_file:
-			json.dump(servers, server_file, indent=2)
-
-	# Purge command prefix upon server leave
-	async def on_guild_remove(self, guild):
-		self.logger.info(f'Bot left {guild.name} (ID: {guild.id})')
-		with open(f'{self.rundir}/private/servers.json', 'r') as server_file:
-			self.servers = json.load(server_file)
-
-		self.servers.pop(str(guild.id))
-
-		with open(f'{self.rundir}/private/servers.json', 'w') as server_file:
-			json.dump(self.servers, server_file, indent=2)
-
-	@staticmethod
-	def roll_one(dice: int):
-		return random.randrange(dice) + 1
-
-	@staticmethod
-	def roll(dices: int, dice: int, keep: int):
-		rolls = [OmenaBot.roll_one(dice) for _ in range(dices)]
-		rolls.sort()
-		rolls = rolls[len(rolls) - keep:]
-		return rolls
-
-	@staticmethod
-	def get_stat():
-		rolled = OmenaBot.roll(4, 6, 3)
-		stat = 0
-		for i in range(3):
-			stat += rolled[i]
-		return f"{stat}({int((stat + 1) / 2) - 5})"
+		self.data.profiles[f"{guild.id}"] = self.data.profiles.setdefault(f"{guild.id}", {})
 
 	async def on_member_join(self, member: discord.Member):
-		if self.servers[f'{member.guild.id}'].get('name') is None:
-			self.servers[f'{member.guild.id}']['name'] = member.guild.name
 		if member.guild.id == 663903542842490910:
 			print(f"{Fore.MAGENTA}{member} joined testman")
 		else:
 			self.logger.info(f'{member} (ID: {member.id}) has joined {member.guild.name} (ID: {member.guild.id})!')
 			print(f'{Fore.GREEN}{member} (ID: {member.id}) has joined {member.guild.name} (ID: {member.guild.id})!')
-
-	async def on_member_update(self, member_before: discord.Member, member_after: discord.Member):
-		if not member_before.nick == member_after.nick:
-			if not self.servers.get(f'{member_after.guild.id}') is None:
-				if not self.servers[f'{member_after.guild.id}'].get("nicks") is None:
-					if f'{member_after.id}' in self.servers[f'{member_after.guild.id}']["nicks"]:
-						if not self.servers[f'{member_after.guild.id}']["nicks"][
-								   f'{member_after.id}'] == member_after.nick:
-							print(f'member changed nick to {member_before.nick} while having '
-								  f'permanick {self.servers[f"{member_after.guild.id}"]["nicks"][f"{member_after.id}"]}')
-							await member_after.edit(reason="permanent nickname",
-													nick=self.servers[f'{member_after.guild.id}']["nicks"][
-														f'{member_after.id}'])
+		await asyncio.sleep(random.gammavariate(1.6, 0.8) * 2)
+		self.data.profiles[f'{member.guild.id}'].setdefault("channels", {})
+		if "welcomes" in self.data.profiles[f'{member.guild.id}']["channels"]:
+			await member.guild.get_channel(int(self.data.profiles[f'{member.guild.id}']["channels"]["welcomes"])).send(
+				random.choice(self.data.responses["hello"]).format(member))
+		elif member.guild.system_channel:
+			await member.guild.system_channel.send(random.choice(self.data.responses["hello"]).format(member))
 
 	async def on_member_remove(self, member: discord.Member):
-		if self.servers[f'{member.guild.id}'].get('name') is None:
-			self.servers[f'{member.guild.id}']['name'] = member.guild.name
+		if self.data.profiles[f'{member.guild.id}'].get('name') is None:
+			self.data.profiles[f'{member.guild.id}']['name'] = member.guild.name
 		if member.guild.id == 663903542842490910:
 			print(f"{Fore.MAGENTA}{member} left testman")
-			print(member.guild.system_channel())
 		else:
 			self.logger.info(f'{member} (ID: {member.id}) has left {member.guild.name} (ID: {member.guild.id})!')
 			print(f'{Fore.RED}{member} (ID: {member.id}) has left {member.guild.name} (ID: {member.guild.id})!')
+		await asyncio.sleep(random.gammavariate(1.6, 0.8) * 2)
+		if "channels" in self.data.profiles[f'{member.guild.id}'] and "welcomes" in \
+						self.data.profiles[f'{member.guild.id}'][
+							"channels"]:
+			await member.guild.get_channel(int(self.data.profiles[f'{member.guild.id}']["channels"]["welcomes"])).send(
+				random.choice(self.data.responses["bye"]).format(member))
+		elif member.guild.system_channel:
+			await member.guild.system_channel.send(random.choice(self.data.responses["bye"]).format(member))
 
 	# Tasks Area
 	@tasks.loop(seconds=5)
@@ -180,35 +97,34 @@ class OmenaBot(commands.bot.Bot):
 	async def on_message(self, message: discord.Message):
 		if not message.author == self.user:
 			ctx: commands.Context = await self.get_context(message)
-			if message.channel.type.name == 'private':
+			if not message.guild:
 				if not message.author.bot and message.content:
 					await self.invoke(ctx)
-					if not ctx.command:
+					if not (ctx.command or ctx.invoked_with):
 						await message.channel.send(
-							"I'm a bot, and certanly not smart enough to talk to you, my friend ¯\\\\_(°^°)\\_/¯",
-							delete_after=2)
+							r"I'm a bot, and certanly not smart enough to talk to you, my friend ¯\\\_(°^°)\_/¯",
+							delete_after=5)
 			else:
-				if 'channels' in self.servers[f'{message.guild.id}']:
-					channels = self.servers[f'{message.guild.id}']
-					if 'image_only' in channels:
+				if ctx.prefix and (ctx.command or regex.match("^" + ctx.prefix + r"\p{L}", message.content)):
+					await self.invoke(ctx)
+				if 'channels' in self.data.profiles[f'{message.guild.id}']:
+					channels = self.data.profiles[f'{message.guild.id}']["channels"]
+					if 'image-only' in channels:
 						image_only = channels['image-only']
 						if message.channel.permissions_for(message.guild.get_member(self.user.id)).manage_messages:
 							if (message.channel.id in image_only) if isinstance(image_only, list) else (
-									message.channel.id == image_only):
+											message.channel.id == image_only):
 								if not message.attachments:
 									if not ctx.command:
-										commands_cog = self.get_cog("General")
-										if commands_cog:
-											await commands_cog.clear(ctx, 0)
-										else:
-											await message.delete()
+										# commands_cog = self.get_cog("General")
+										# if commands_cog:
+										# 	await commands_cog.delete(ctx, message)
+										# else:
+										await message.delete()
 										return
-				if ctx.prefix and (ctx.command or regex.match("^" + ctx.prefix + "\p{L}", message.content)):
-					await self.invoke(ctx)
-					# await ctx.invoke()
-					# await self.process_commands(message)
-				if message.content[0:22] == f"<@!{self.user.id}>":
-					if message.content[23:] == "guilds":
+
+				if message.content.startswith(self.user.mention):
+					if message.content.rstrip(self.user.mention + " ") == "guilds":
 						await message.delete()
 						guilds = ""
 						for guild in self.guilds:
@@ -219,97 +135,149 @@ class OmenaBot(commands.bot.Bot):
 						await message.delete()
 						self.logger.info(f"Bot was pinged in {message.guild.id}, by {message.author.id}")
 						await message.channel.send(f'Current prefix is "`{await self.get_prefix(message)}`"')
-				if "who is an idiot?" in message.content and f'{message.author.id}' in self.config['devs']:
-					await message.channel.send(
-						f"<@{message.author.id}>, you are an idiot {'<:kekw:851854426665910282>' if message.guild.id == 666295714724446209 else ''}")
 
-	####################################
-	# error catch area
-	async def on_command_error(self, ctx: commands.context, error):
-		# checks to see if command is missing args, then sends message
-		if isinstance(error, commands.MissingRequiredArgument):
-			self.logger.info(f"{ctx.author} haven't filled all arguments. `{ctx.message.content}`")
-			await ctx.send('Please fill all required arguments! :eyes:')
-			return
+	@staticmethod
+	@commands.command(name="cog")
+	async def cog(context: commands.Context, action: str, name: str = None):
+		self = context.bot
+		index = 0
+		try:
+			index = int(name)
+			name = list(self.extensions.keys())[index][5:]
+		except IndexError:
+			print(f"index {index} is {'more than number of extensions' if index > len(self.extensions) else 'less than 0'}")
+		except (ValueError, TypeError):
+			pass
+		if action in ["load", "unload", "reload"] and f"{context.author.id}" in self.data.bot["devs"] and name:
+			if context.guild:
+				await context.message.delete()
+			try:
+				print(action + "ing", name, "requested by", context.author.name, end="… ", flush=True)
+				await asyncio.sleep(0)
+				t = time.perf_counter()
+				{
+					"load": self.load_extension,
+					"unload": self.unload_extension,
+					"reload": self.reload_extension,
+				}[action](f'cogs.{name}')
+				self.logger.info(f"extension {name} loaded by {context.author.name}")
+				print(f"{action}ed. (took {time.perf_counter() - t:1.5f} seconds)", end="")
+			except commands.ExtensionNotFound:
+				print("not loaded", end="")
+				await context.send(f"cog {name} is not found")
+			except commands.ExtensionNotLoaded:
+				print("not loaded", end="")
+				await context.send(f"cog {name} is not loaded")
+			except commands.ExtensionAlreadyLoaded:
+				print("already  loaded", end="")
+				await context.send(f"cog {name} is already loaded")
+			except commands.NoEntryPointError:
+				print("no setup in " + name)
+				await context.send(f"check your code, you forgot setup(bot) in {name}")
+			except commands.ExtensionFailed as e:
+				print(f'''exception {e.original} occurred while loading extension {name}
+{"""
+""".join(traceback.format_exception(e.original))}''', end="")
+				await context.send(f'''exception {e.original} occurred while loading extension {name}```py
+{"""
+""".join(traceback.format_exception(e.original))}```''')
+			finally:
+				print("")
+		elif action == "list":
+			await context.send(
+				"\n".join([f'{num}: {ext.__package__}/{ext.__name__.lstrip(ext.__package__)[1:]}' for num, ext in
+				           enumerate(self.extensions.values())]))
 
-		if isinstance(error, discord.errors.Forbidden):
-			await ctx.send('Bot\'s missing permissions')
-			return
-
-		# checks to see if permissions all exist
-		if isinstance(error, commands.MissingPermissions):
-			self.logger.error(
-				f"{ctx.author.name} (ID {ctx.author.id}) tried running command they don't have permission to.")
-			await ctx.send("You're missing required permissions! :x:")
-			print("Someone tried to run a command that they don't have permissions for!")
-			return
-
-		# checks to see if command args being passed in are invalid/unparseable, then sends message
-		if isinstance(error, commands.BadArgument):
-			self.logger.info(f"{ctx.author} passed invalid arguments in arguments.")
-			await ctx.send(f'Please check the arguments you provided\n{error.args[1]}')
-			await ctx.send("One of them couldn't be converted to {}".format(error.args[0].split('"')[1]))
-			return
-
-		if isinstance(error, commands.BotMissingPermissions):
-			self.logger.critical("Bot is missing required permissions.")
-			await ctx.send("I'm missing administrator permissions! :x:")
-			return
-
-		if isinstance(error, commands.CommandNotFound):
-			self.logger.info(
-				f'{ctx.message.author.name} (ID: {ctx.message.author.id}) tried to run command '
-				f'"{ctx.invoked_with}" which does not exist.')
-			await ctx.send(f'Command "{ctx.invoked_with}" does not exist! :x:')
-			return
-
-		import traceback
-		[print(line) for line in traceback.format_exception(commands.CommandInvokeError, error, None)]
-		self.logger.error(f"Unexpected error occured in command \"{ctx.command.name}\" with parameters {ctx.args[1:]}.")
-		self.logger.error(error.original)
-		await ctx.send("An unexpected error occured! :x:")
-
-	# -----------------------------------
-	# Cogs Load
-	@commands.command(hidden=True)
-	async def load(self, ctx, extension):
-		print(ctx, extension)
-		self.load_extension(f'cogs.{extension}')
-
-	# Cogs Unload
-	@commands.command(hidden=True)
-	async def unload(self, ctx, extension):
-		self.unload_extension(f'cogs.{extension}')
-
-	def __init__(self, **options):
+	def __init__(self, token_name=None, *, no_load=[], gui=False, debug=False, **options):
+		# noinspection PyUnresolvedReferences
 		intents = discord.Intents.default()
 		intents.members = True
 		intents.reactions = True
 		# intents.typing = True
 		# intents.presences = True
 		super().__init__(self.get_prefix, intents=intents, **options)
+		self.debug = None
+		self.token = token_name
 
 		self.start_time_ns: int = 0
 		self.start_time = ""
-		self.output = None
+
+		self.output = DoubleIO(BufferIO(), sys.stdout)
+		sys.stdout = self.output
 		init_terminal_styling(autoreset=True)
 		now = time.gmtime()
 		self.init_time_ns = time.monotonic_ns()
-		self.init_time = f'{now[0]}_{str(now[1]).rjust(2, "0")}_{str(now[2]).rjust(2, "0")}_{str(now[3]).rjust(2, "0")}_{str(now[4]).rjust(2, "0")}_{str(now[5]).rjust(2, "0")}'
-		print(f"Initialized at {Style.BRIGHT}{Fore.YELLOW}{self.init_time}")
+		self.init_time = f'{now[0]}_{now[1]:02d}_{now[2]:02d}_{now[3]:02d}_{now[4]:02d}_{now[5]:02d}'
+		print(f"Initialized at {Style.BRIGHT}{Fore.YELLOW}{self.init_time}{Style.NORMAL}{Fore.RESET}")
 
 		self.rundir = pathlib.Path(__file__, ).parent.parent.absolute()
 		self.home = os.getenv('HOME')
 
 		try:
-			stats = os.stat(f"{self.rundir}/python/logs/latest.log")
+			stats = os.stat(self.rundir / f"python/logs/{self.token}_latest.log")
 			created = time.gmtime(stats.st_ctime)
-			created_time = f'{created[0]}_{str(created[1]).rjust(2, "0")}_{str(created[2]).rjust(2, "0")}_{str(created[3]).rjust(2, "0")}_{str(created[4]).rjust(2, "0")}_{str(created[5]).rjust(2, "0")}'
-			os.rename(f"{self.rundir}/python/logs/latest.log", f"{self.rundir}/python/logs/{created_time}.log")
+			created_time = f'{created[0]}_{created[1]:02d}_{created[2]:02d}_{created[3]:02d}_{created[4]:02d}_{created[5]:02d}'
+			os.rename(
+				self.rundir / f"python/logs/{self.token}_latest.log",
+				self.rundir / f"python/logs/{created_time}_{self.token}.log"
+			)
 		except FileNotFoundError:
-			print(f"{Style.DIM}No latest log.")
-		logging.basicConfig(format="[%(asctime)s] [%(threadName)s|%(name)s/%(levelname)-5s] %(message)s",
-							filename=f'{self.rundir}/python/logs/latest.log', level=logging.INFO)
+			print(f"{Style.DIM}No latest log.{Style.NORMAL}")
+
+		try:
+			stats = os.stat(self.rundir / f"python/logs/debug_{self.token}_latest.log")
+			created = time.gmtime(stats.st_ctime)
+			created_time = f'{created[0]}_{created[1]:02d}_{created[2]:02d}_{created[3]:02d}_{created[4]:02d}_{created[5]:02d}'
+			os.rename(
+				self.rundir / f"python/logs/debug_{self.token}_latest.log",
+				self.rundir / f"python/logs/{created_time}_{self.token}_debug.log"
+			)
+		except FileNotFoundError:
+			print(f"{Style.DIM}No latest debug log.{Style.NORMAL}")
+
+		from logging import config as lonfig
+		lonfig.dictConfig({
+			"version": 1,
+			'disable_existing_loggers': False,
+			"formatters": {
+				"default": {
+					"format": "[%(asctime)s] [%(threadName)s|%(name)-16s/%(levelname)-8s] %(message)s"
+				},
+				"brief": {
+					"format": "%(levelname)-8s: %(message)s"
+				}
+			},
+			'handlers': {
+				"console": {
+					"class": "logging.StreamHandler",
+					"formatter": "brief",
+					"stream": self.output,
+					"level": 0 if self.debug else "INFO"
+				},
+				"info": {
+					"class": "logging.FileHandler",
+					"filename": f'{self.rundir}/python/logs/{self.token}_latest.log',
+					"formatter": "default",
+					"level": "INFO"
+				},
+				"verbose": {
+					"class": "logging.FileHandler",
+					"filename": f'{self.rundir}/python/logs/debug_{self.token}_latest.log',
+					"formatter": "default"
+				}
+			},
+			"loggers": {
+				'': {
+					"level": 0,
+					"handlers": [
+						"console",
+						"verbose",
+						"info"
+					]
+				}
+			}
+		})
+		logging.captureWarnings(True)
 		self.logger = logging.getLogger("bot.main")
 		self.logger.info(f'Initialized at {self.init_time}.')
 
@@ -317,43 +285,89 @@ class OmenaBot(commands.bot.Bot):
 		self.stop_pings = False
 
 		self.logger.info(f'Loading configs.')
-
-		with open(f'{self.rundir}/private/servers.json') as servers_file:
-			self.servers = json.load(servers_file)
-
-		with open(f'{self.rundir}/private/dnd.json') as servers_file:
-			self.dnd_conf = json.load(servers_file)
-
-		with open(f'{self.rundir}/private/bot.json') as file:
-			self.config = json.load(file)
-
-		with open(f"{self.rundir}/responselists.json") as file:
-			self.responses = json.load(file)
+		self.data = data.Data(self.rundir)
 
 		self.logger.info(f'Loading cogs.')
 
+		self.add_command(self.cog)
+
 		for filename in os.listdir(f'{self.rundir}/python/cogs'):
-			if filename.endswith('.py'):
-				print(filename)
-				if not filename.startswith("gui") or "-gui" in sys.argv:
+			if filename.endswith('.py') and (not filename.endswith("disabled.py")):
+				if gui if filename[:-3] == "gui" else filename[:-3] not in no_load:
+					print("loading", filename, end="… ")
+					t = time.perf_counter()
 					self.load_extension(f'cogs.{filename[:-3]}')
+					print(f"loaded. (took {time.perf_counter() - t:1.5f} seconds)")
 
 		self.logger.info(f'Loading complete.')
-		print("Loading complete.")
 
-	def run_bot(self, func, token_name):
-		if token_name not in self.config["tokens"]:
-			raise NameError(f"There's no token for bot account {token_name}, please check.")
+	def run_bot(self, func, token_name=None):
+		self.token = self.token or token_name
+		if self.token not in self.data.tokens["discord"]:
+			raise NameError(f"There's no token for bot account {self.token}, please check.")
 		else:
-			print(f'Starting as {Fore.CYAN}{Style.BRIGHT}{token_name}{Style.RESET_ALL} bot user')
+			self.logger.info(f'Starting as {Fore.CYAN}{Style.BRIGHT}{self.token}{Style.NORMAL}{Fore.RESET} bot user')
 		now = time.gmtime()
 		self.start_time_ns = time.monotonic_ns()
-		self.start_time = f'{now[0]}_{now[1]}_{now[2]}_{now[3]}_{now[4]}_{now[5]}'
-		print(f"Started at {Style.BRIGHT}{Fore.YELLOW}{self.start_time}")
-		func(self.config["tokens"].get(token_name))
+		self.start_time = f'{now[0]}_{now[1]:02d}_{now[2]:02d}_{now[3]:02d}_{now[4]:02d}_{now[5]:02d}'
+		self.logger.info(f"Started at {Style.BRIGHT}{Fore.YELLOW}{self.start_time}{Style.NORMAL}{Fore.RESET}")
+		func(self.data.tokens["discord"].get(self.token))
+
+	async def close(self):
+		await self.change_presence(status=discord.Status.offline)
+		await super(OmenaBot, self).close()
 
 	async def close_bot(self, name="console", name_id=0):
 		print("close_bot called")
 		await self.close()
 		self.logger.info(f'Bot Closed By {name} ID: {name_id}')
 		print(f'Bot Closed By Developer: {name} ID: {name_id}')
+
+	####################################
+	# error catch area
+	async def on_command_error(self, context: commands.Context, error):
+		match error:
+			case commands.NSFWChannelRequired():
+				await context.send(f"Channel '{error.channel}' needs to be NSFW for this command to work.")
+
+			case commands.MissingRequiredArgument():
+				self.logger.info(f"{context.author} haven't filled all arguments. `{context.message.content}`")
+				await context.send('Please fill all required arguments! :eyes:')
+
+			case discord.errors.Forbidden():
+				await context.send('Bot\'s missing permissions')
+
+			case commands.MissingPermissions():
+				self.logger.error(
+					f"{context.author.name} (ID {context.author.id}) tried running command they don't have permission for.")
+				await context.send("You're missing required permissions! :x:")
+				print(
+					f"{context.author.name} (ID {context.author.id}) tried running command they don't have permission for.")
+
+			case commands.BotMissingPermissions(missing_permissions=perms, message=original):
+				self.logger.critical("Bot is missing required permissions.")
+				try:
+					await context.send(f"{original[:-1]}! :x:")
+				except discord.Forbidden:
+					await context.author.send(f"{original[:-1]}! :x:\nIf you encounter this messsage but are not server stuff"
+					                          f", please inform the server staff of it")
+
+			case commands.CommandNotFound():
+				self.logger.info(
+					f'{context.message.author.name} (ID: {context.message.author.id}) tried to run command '
+					f'"{context.invoked_with}" which does not exist.')
+				await context.send(f'Command "{context.invoked_with}" does not exist! :x:')
+
+			case commands.BadArgument():
+				self.logger.info(f"{context.author} passed invalid arguments in arguments.")
+				await context.send(f'Please check the arguments you provided\n{error.args}')
+				await context.send("One of them couldn't be converted to {}".format(error.args[0].split('"')[1]))
+
+			case commands.CommandError():
+				import traceback
+
+				[print(line) for line in traceback.format_exception(commands.CommandInvokeError, error, None)]
+				self.logger.error(
+					f"Unexpected error occured in command \"{context.command.name}\" with parameters {context.args[1:]}.")
+				self.logger.error(error.message)
+				await context.send(f"An unexpected error occured! :x:\n{error.message}")

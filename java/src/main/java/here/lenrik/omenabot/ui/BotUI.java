@@ -76,6 +76,7 @@ public class BotUI extends JFrame {
 		infotab.setGuildCount(event.getJDA().getGuilds().size() + " guilds (" + (event.getJDA().getGuilds().size() - event.getJDA().getUnavailableGuilds().size()) + "/" + event.getJDA().getUnavailableGuilds().size() + ")");
 		infotab.setState("state: '" + event.getJDA().getStatus().name() + "'");
 		infotab.setGuilds(event.getJDA().getGuilds());
+		consoleTab.updateStatus(event);
 	}
 
 }

@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "omenamod",
+  "version": "${version}",
+
+  "name": "OmenaMod",
+  "description": "",
+  "authors": [],
+  "contact": {},
+
+  "license": "All-Rights-Reserved",
+  "icon": "assets/omenamod/icon.png",
+
+  "environment": "*",
+  "entrypoints": {
+		"client": [
+			"here.lenrik.omenamod.client.OmenaClient"
+		],
+		"main": [
+			"here.lenrik.omenamod.Omenamod"
+		],
+		"server": [
+			"here.lenrik.omenamod.server.OmenaServer"
+		]
+	},
+
+          "mixins": [
+        "omenamod.mixins.json"
+      ],
+    
+  "depends": {
+    "fabricloader": ">=0.11.0",
+              "fabric": "*",
+          "minecraft": "1.16.4"
+  }
+}

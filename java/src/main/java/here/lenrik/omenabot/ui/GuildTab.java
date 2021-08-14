@@ -13,10 +13,12 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
 import java.util.EventObject;
 import java.util.Map;
 
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.GuildChannel;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 
@@ -26,6 +28,7 @@ public class GuildTab extends JPanel {
 	private final JTextField prefixField;
 	private final JLabel membersLabel;
 	private final JTable nicks;
+	private final JTable channels;
 	private Guild apiGuild;
 
 	public GuildTab (final Guild guild, BotUI botUi) {
@@ -46,8 +49,9 @@ public class GuildTab extends JPanel {
 			prefixField = new JTextField("");
 			prefixField.addActionListener((action) -> {
 				OmenaBot.LOGGER.info(action.getActionCommand());
-				((GuildTab) ((JTextField) action.getSource()).getParent().getParent()).settings.prefix = action.getActionCommand();
-				((GuildTab) ((JTextField) action.getSource()).getParent().getParent()).botUi.getBot().config.save(System.getProperty("user.dir") + "/test");
+				final GuildTab guildTab = (GuildTab) ((JTextField) action.getSource()).getParent().getParent();
+				guildTab.settings.prefix = action.getActionCommand();
+				guildTab.botUi.getBot().config.save();
 			});
 			prefixField.addKeyListener(new KeyAdapter() {
 				@Override
@@ -62,7 +66,7 @@ public class GuildTab extends JPanel {
 		JPopupMenu menu = new JPopupMenu();
 		{
 			menu.add(new TextAction("add") {
-				public void actionPerformed (ActionEvent e) {OmenaBot.LOGGER.info(((JComponent)e.getSource()).getParent());}
+				public void actionPerformed (ActionEvent e) {OmenaBot.LOGGER.info(((JComponent) e.getSource()).getParent());}
 			});
 			setComponentPopupMenu(menu);
 		}
@@ -105,16 +109,16 @@ public class GuildTab extends JPanel {
 			} catch (NullPointerException e) {
 				return new JLabel("npe");
 			} catch (ErrorResponseException e) {
-				switch (e.getErrorCode()){
+				switch (e.getErrorCode()) {
 					case 0 -> OmenaBot.LOGGER.trace(e);
 					case 10013 -> OmenaBot.LOGGER.info(
 							"User {} is not valid",
-							guild.getJDA().getUserById(value.toString()) == null?(guild.getJDA().retrieveUserById(value.toString()).complete()) :(guild.getJDA().getUserById(value.toString()))
+							guild.getJDA().getUserById(value.toString()) == null ? (guild.getJDA().retrieveUserById(value.toString()).complete()) : (guild.getJDA().getUserById(value.toString()))
 					);
 					case 10007 -> {
 						OmenaBot.LOGGER.info(
 								"User {} is no longer a member of guild {}",
-								guild.getJDA().getUserById(value.toString()) == null? guild.getJDA().retrieveUserById(value.toString()).complete() : guild.getJDA().getUserById(value.toString()),
+								guild.getJDA().getUserById(value.toString()) == null ? guild.getJDA().retrieveUserById(value.toString()).complete() : guild.getJDA().getUserById(value.toString()),
 								guild
 						);
 						origin.botUi.getBot().config.servers.get(guild.getId()).nicks.remove(value.toString());
@@ -130,7 +134,7 @@ public class GuildTab extends JPanel {
 			label.setFont(new Font("Exo" + (1 + 1), Font.PLAIN, 14));
 			return label;
 		}));
-		nicks.setDefaultEditor(Member.class, new TableCellEditor(){
+		nicks.setDefaultEditor(Member.class, new TableCellEditor() {
 			JTextField cell = new JTextField();
 
 			@Override
@@ -167,6 +171,7 @@ public class GuildTab extends JPanel {
 			public void removeCellEditorListener (CellEditorListener l) {
 
 			}
+
 			@Override
 			public Component getTableCellEditorComponent (JTable table, Object value, boolean isSelected, int row, int column) {
 				return cell = new JTextField(value.toString());
@@ -175,10 +180,33 @@ public class GuildTab extends JPanel {
 		nicks.setComponentPopupMenu(menu);
 		final JScrollPane nicksPane = new JScrollPane(nicks);
 		listsPane.add(nicksPane, BorderLayout.NORTH);
-		JTable channelsTable = new JTable(new DefaultTableModel(new String[]{"channel", "channels"}, 0));
-//		channelsTable.setDefaultRenderer();
-		channelsTable.setComponentPopupMenu(menu);
-		listsPane.add(new JScrollPane(channelsTable), BorderLayout.CENTER);
+		channels = new JTable(new DefaultTableModel(new String[]{"channel", "channels"}, 0) {
+			@Override
+			public Class<?> getColumnClass (int columnIndex) {
+				return columnIndex == 1 ? ServerSettings.Id_s.class : super.getColumnClass(columnIndex);
+			}
+		});
+		channels.setDefaultRenderer(ServerSettings.Id_s.class, (table, value, isSelected, hasFocus, row, column) -> {
+			if(value instanceof ServerSettings.Id_s){
+				ServerSettings.Id_s id_s = (ServerSettings.Id_s) value;
+				if(id_s.isList()){
+					JPanel t = new JPanel(new BorderLayout());
+					for(Long id: (ArrayList<Long>)id_s.get()){
+						GuildChannel channel = guild.getGuildChannelById(id);
+						t.add(new JLabel(channel!= null? channel.getName(): "invalid channel"), BorderLayout.NORTH);
+					}
+					SwingUtilities.invokeLater(table::updateUI);
+					return t;
+				}else{
+					GuildChannel channel = guild.getGuildChannelById((Long) id_s.get());
+					return new JLabel(channel!= null? channel.getName(): "invalid channel");
+				}
+			}
+			return null;
+		});
+		//		channels.setDefaultRenderer();
+		channels.setComponentPopupMenu(menu);
+		listsPane.add(new JScrollPane(channels), BorderLayout.CENTER);
 		add(new JScrollPane(listsPane));
 		updateConfig();
 	}
@@ -196,6 +224,16 @@ public class GuildTab extends JPanel {
 					}
 					for (Map.Entry<String, String> entry : settings.nicks.entrySet()) {
 						((DefaultTableModel) nicks.getModel()).addRow(new String[]{entry.getKey(), entry.getValue()});
+					}
+				}
+			}
+			if (settings.channels != null && settings.channels.size() > 0) {
+				if (channels != null) {
+					while (channels.getModel().getRowCount() > 0) {
+						((DefaultTableModel) channels.getModel()).removeRow(0);
+					}
+					for (Map.Entry<String, ServerSettings.Id_s> entry : settings.channels.entrySet()) {
+						((DefaultTableModel) channels.getModel()).addRow(new Object[]{entry.getKey(), entry.getValue()});
 					}
 				}
 			}

@@ -8,6 +8,10 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.ClipboardOwner;
+import java.awt.datatransfer.StringSelection;
+import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -28,7 +32,7 @@ public class InfoPanel extends JTabbedPane {
 	final JLabel members;
 	final JLabel guildCount;
 	final JLabel state;
-	final JLabel botInvite;
+	final JButton botInvite;
 	private final BotUI botUi;
 	Long invitePermissions = ADMINISTRATOR.getRawValue();
 
@@ -71,7 +75,13 @@ public class InfoPanel extends JTabbedPane {
 		permsTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 		permsTable.setDefaultEditor(PermBox.class, new PermBox.PermEditor());
 		inviteGenerator.add(new JScrollPane(permsTable), BorderLayout.CENTER);
-		inviteGenerator.add(botInvite = new JLabel(botUi.getBot() != null ? botUi.getBot().getApi().getInviteUrl() : ""), BorderLayout.SOUTH);
+		inviteGenerator.add(botInvite = new JButton(botUi.getBot() != null ? botUi.getBot().getApi().getInviteUrl() : ""), BorderLayout.SOUTH);
+		botInvite.setAction(new AbstractAction() {
+			@Override public void actionPerformed (ActionEvent e) {
+				String link = ((JButton)e.getSource()).getText();
+				getToolkit().getSystemClipboard().setContents(new StringSelection(link), null);
+			}
+		});
 		generalInfo = new JPanel();
 		generalInfo.setLayout(new BorderLayout());
 		generalInfo.add(status, BorderLayout.NORTH);

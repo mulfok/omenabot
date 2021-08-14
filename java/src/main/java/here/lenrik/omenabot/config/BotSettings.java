@@ -10,6 +10,8 @@ import org.jetbrains.annotations.Nullable;
 
 public class BotSettings {
 	@SuppressWarnings("unused")
+	public HashMap<String, String> tokens;
+	@SuppressWarnings("unused")
 	public String token;
 	@SuppressWarnings("unused")
 	public HashMap<String, Boolean> ping;

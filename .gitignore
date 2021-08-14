@@ -1,6 +1,8 @@
 logs/*
 python/logs/*
 private/*
+private (backup)/*
+youtube-*
 */.vscode
 /test/**
 .vscode/*

@@ -8,7 +8,7 @@ import static com.mojang.brigadier.builder.LiteralArgumentBuilder.literal;
 import static com.mojang.brigadier.builder.RequiredArgumentBuilder.argument;
 
 public class TestCommand {
-	public static void regiter (CommandDispatcher<Object> dispatcher) {
+	public static void register (CommandDispatcher<Object> dispatcher) {
 		dispatcher.register(
 				literal(
 						"test"

@@ -42,6 +42,14 @@
 		"Outlook not so good.",
 		"Very doubtful."
 	],
+	"hello":[
+		"Welcome, {0.display_name}, nice to see you :heart:",
+		"We don't need pizza ~~right now~~, {0.display_name}, we are glad you came",
+		"May the blessing of the sun be with you, {0.display_name}, welcome"
+	],
+	"bye":[
+		"Oh, {0.display_name}, left, :cry:, hope they return"
+	],
 	"jokes": [
 		["Why did the chicken cross the road?", "To get to the other side!"],
 		["Why can't cats use a computer?", "Because they're always chasing the mouse!"],

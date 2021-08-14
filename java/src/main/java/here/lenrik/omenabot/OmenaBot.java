@@ -7,6 +7,8 @@ import here.lenrik.omenabot.ui.BotUI;
 
 import javax.security.auth.login.LoginException;
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.RunnableFuture;
 import java.util.regex.Pattern;
 
 import com.mojang.brigadier.CommandDispatcher;
@@ -32,28 +34,30 @@ import org.jetbrains.annotations.NotNull;
 
 public class OmenaBot extends ListenerAdapter {
 	public static final Logger LOGGER = LogManager.getLogger("OmenaBot");
+	public static final ConcurrentLinkedQueue<RunnableFuture> mainThreadQueue = new ConcurrentLinkedQueue<>();
 	public static final CommandDispatcher<Object> dispatcher = new CommandDispatcher<>();
 	public static OmenaBot INSTANCE;
 	public final ConfigManager config;
 	private final BotUI ui;
 	JDA discordApi;
 
-	public OmenaBot (ConfigManager config, BotUI ui) throws LoginException {
+	public OmenaBot (ConfigManager config, BotUI ui, String tokenName) throws LoginException {
 		INSTANCE = this;
 		this.config = config;
 		this.ui = ui;
 		CommandManager.register(dispatcher);
-		discordApi = JDABuilder.createDefault(config.botSettings.token).enableIntents(GatewayIntent.GUILD_MEMBERS).addEventListeners(this).setMemberCachePolicy(MemberCachePolicy.ALL).build();
+		discordApi =
+				JDABuilder.createDefault(config.botSettings.tokens.get(tokenName)).enableIntents(GatewayIntent.GUILD_MEMBERS).addEventListeners(this).setMemberCachePolicy(MemberCachePolicy.ALL).build();
 	}
 
 	@Override
 	public void onGenericEvent (@NotNull GenericEvent event) {
 		super.onGenericEvent(event);
-		ui.updateStatus(event);
 	}
 
 	@Override
 	public void onReady (@NotNull ReadyEvent event) {
+		LogManager.getLogger("main").info("Hello it's {}", discordApi.getSelfUser().getName());
 		ui.updateStatus(event);
 		for (Guild guild : event.getJDA().getGuilds()) {
 			config.servers.get(guild.getId()).name = guild.getName();
@@ -69,7 +73,6 @@ public class OmenaBot extends ListenerAdapter {
 		}
 		config.save();
 	}
-
 
 	@Override
 	@SuppressWarnings({"unchecked", "OptionalGetWithoutIsPresent"})
@@ -98,29 +101,34 @@ public class OmenaBot extends ListenerAdapter {
 					if (a[0]) {
 						event.getChannel().sendMessage((e.values()).stream().unordered().findFirst().get().getMessage()).queue();
 					}
+					LOGGER.debug(messageContentsNoPrefix);
 				}
 			}
-			LOGGER.debug(messageContentsNoPrefix);
 		} else {
-			HashMap<String, ServerSettings.Id_s> channels = settings.channels;
-			if (channels != null) {
-				ServerSettings.Id_s imageOnly = channels.get("image-only");
-				if (imageOnly != null) {
-					if (imageOnly.get() instanceof Long) {
-						Long channel = (Long) imageOnly.get();
-						if (channel.equals(event.getChannel().getIdLong()) && event.getMessage().getAttachments().size() < 1) {
-							event.getMessage().delete().queue();
-						}
-					} else if (imageOnly.get() instanceof List) {
-						for (Long channel : (ArrayList<Long>) imageOnly.get()) {
+			var mentions = event.getMessage().getMentionedMembers();
+			if(mentions.size() == 1 && mentions.contains(event.getMember())){
+				event.getChannel().sendMessage("Current prefix is [`" + prefix + "`].").queue();
+			} else {
+				HashMap<String, ServerSettings.Id_s> channels = settings.channels;
+				if (channels != null) {
+					ServerSettings.Id_s imageOnly = channels.get("image-only");
+					if (imageOnly != null) {
+						if (imageOnly.get() instanceof Long) {
+							Long channel = (Long) imageOnly.get();
 							if (channel.equals(event.getChannel().getIdLong()) && event.getMessage().getAttachments().size() < 1) {
 								event.getMessage().delete().queue();
+							}
+						} else if (imageOnly.get() instanceof List) {
+							for (Long channel : (ArrayList<Long>) imageOnly.get()) {
+								if (channel.equals(event.getChannel().getIdLong()) && event.getMessage().getAttachments().size() < 1) {
+									event.getMessage().delete().queue();
+								}
 							}
 						}
 					}
 				}
+				LOGGER.debug(event.getMessage());
 			}
-			LOGGER.debug(event.getMessage());
 		}
 	}
 
@@ -201,10 +209,6 @@ public class OmenaBot extends ListenerAdapter {
 			public MessageChannel getChannel () {
 				return channel;
 			}
-
-			//			public Message getMessage () {
-			//				return message;
-			//			}
 
 		}
 

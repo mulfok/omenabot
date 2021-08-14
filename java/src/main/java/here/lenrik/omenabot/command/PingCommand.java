@@ -20,7 +20,6 @@ public class PingCommand {
 							((OmenaBot.BotCommandSource) context.getSource()).getEvent().getChannel().sendMessage("pong! (processing:" + processing + "ms, ping:" + ping + "ms)").queue();
 							return 0;
 						}
-
 				)
 		);
 	}

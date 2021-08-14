@@ -26,6 +26,26 @@ public class Adapters {
 		builder.registerTypeAdapter(ServerSettings.class, new Adapters.ServerSettingsA());
 		builder.registerTypeAdapter(serversType, new Adapters.Servers());
 	}
+/*
+	public static final class Id_sA extends TypeAdapter<ServerSettings.Id_s>{
+
+		public void write (JsonWriter out, ServerSettings.Id_s id_s) throws IOException {
+			if(id_s == null){
+				out.nullValue();
+				return;
+			}
+			if(id_s.isList()){
+
+			}else{
+				out.value(id_s.getLong());
+			}
+		}
+
+		public ServerSettings.Id_s read (JsonReader in) throws IOException {
+			return null;
+		}
+
+	}*/
 
 	public static final class ServerSettingsA extends TypeAdapter<ServerSettings> {
 
@@ -55,15 +75,14 @@ public class Adapters {
 				for (var channel : settings.channels.entrySet()) {
 					out.name(channel.getKey());
 					ServerSettings.Id_s id_s = channel.getValue();
-					if (id_s.get() instanceof Long) {
-						out.value((Long) id_s.get());
-					} else {
+					if (id_s.isList()) {
 						out.beginArray();
-						//noinspection unchecked
-						for (Long id : (ArrayList<Long>) id_s.get()) {
+						for (Long id : id_s.getList()) {
 							out.value(id);
 						}
 						out.endArray();
+					} else {
+						out.value((Long) id_s.get());
 					}
 				}
 				out.endObject();
@@ -242,6 +261,13 @@ public class Adapters {
 				return;
 			}
 			out.beginObject();
+			out.name("tokens");
+			out.beginObject();
+			for (var entry : settings.tokens.entrySet()) {
+				out.name(entry.getKey());
+				out.value(entry.getValue());
+			}
+			out.endObject();
 			out.name("token");
 			out.value(settings.token);
 			if (settings.devs != null) {
@@ -278,6 +304,15 @@ public class Adapters {
 				if (token.equals(NAME)) {
 					//get the current token
 					fieldName = reader.nextName();
+				}
+
+				if ("tokens".equals(fieldName)) {
+					settings.tokens = new HashMap<>();
+					reader.beginObject();
+					while (reader.hasNext()) {
+						settings.tokens.put(reader.nextName(), reader.nextString());
+					}
+					reader.endObject();
 				}
 
 				if ("token".equals(fieldName)) {

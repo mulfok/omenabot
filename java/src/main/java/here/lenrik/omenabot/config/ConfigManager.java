@@ -33,7 +33,7 @@ public class ConfigManager {
 	public void load (String location) {
 		saveLocation = location;
 		try {
-			botSettings = here.lenrik.omenabot.config.BotSettings.load(location + "/private/bot.json");
+			botSettings = BotSettings.load(location + "/private/bot.json");
 			responses = Responses.load(location + "/responselists.json");
 			servers = gson.fromJson(Files.readString(Path.of(location, "/private/servers.json")), serversType);
 		} catch (IOException e) {
